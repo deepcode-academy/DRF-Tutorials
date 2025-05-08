@@ -30,3 +30,18 @@ pip install django
 ```shell
 pip install djangorestframework
 ```
+
+# 📁 Create Django Project and App
+
+## 📌 Create Django project:
+
+```shell
+django-admin startproject config .
+cd config
+```
+
+## 📌 Create Django app:
+
+```shell
+python manage.py startapp api
+```
