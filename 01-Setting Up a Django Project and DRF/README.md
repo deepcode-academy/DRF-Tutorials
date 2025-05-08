@@ -73,6 +73,12 @@ class Post(models.Model):
         return self.title
 ```
 
+🧠 Explanation:
+- `models.Model` – bu `Post` class Django model ekanini bildiradi.
+- `title = models.CharField(...)` – bu sarlavha uchun maxsus ustun bo‘lib, 100ta belgigacha matn qabul qiladi.
+- `content = models.TextField()` – bu post matni uchun, uzun matnlarni saqlashga mo‘ljallangan.
+- `__str__` – admin panelda model obyektining ko‘rinishini o‘zgartiradi (sarlavhani ko‘rsatadi).
+
 ## 🔗 Make and apply migrations:
 
 ```shell
