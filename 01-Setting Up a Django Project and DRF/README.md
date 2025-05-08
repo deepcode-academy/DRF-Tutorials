@@ -2,13 +2,13 @@
 
 # 📌 Set up the environment (Virtual Environment)
 
-## 🧪 Create a virtual environment:
+## 📌 Create a virtual environment:
 
 ```shell
 python -m venv env
 ```
 
-## 🌍 Activate the virtual environment:
+## 📌 Activate the virtual environment:
 ### Windows
 
 ```shell
@@ -21,7 +21,7 @@ env\Scripts\activate
 source venv/bin/activate
 ```
 
-## 🧩 Install Django and DRF:
+## 📌 Install Django and DRF:
 
 ```shell
 pip install django
@@ -45,3 +45,16 @@ cd config
 ```shell
 python manage.py startapp api
 ```
+
+# ⚙️ Configure settings.py
+
+## 📌 Add apps to INSTALLED_APPS:
+
+```python
+INSTALLED_APPS = [
+    # ...
+    'rest_framework',
+    'api',
+]
+```
+
