@@ -58,3 +58,39 @@ INSTALLED_APPS = [
 ]
 ```
 
+# 📦 Create a Model (e.g. Post model)
+
+### Inside api/models.py:
+
+```python
+from django.db import models
+
+class Post(models.Model):
+    title = models.CharField(max_length=100)
+    content = models.TextField()
+
+    def __str__(self):
+        return self.title
+```
+
+## 🔨 4.1. Make and apply migrations:
+
+```shell
+python manage.py makemigrations
+python manage.py migrate
+```
+
+# 🧰 5. Create a Serializer
+
+### Inside api/serializers.py:
+
+```python
+from rest_framework import serializers
+from .models import Post
+
+class PostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = '__all__'
+```
+
