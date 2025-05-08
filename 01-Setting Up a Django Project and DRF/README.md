@@ -60,7 +60,7 @@ INSTALLED_APPS = [
 
 # 📦 Create a Model (e.g. Post model)
 
-### Inside api/models.py:
+### 📌 Inside api/models.py:
 
 ```python
 from django.db import models
@@ -73,16 +73,16 @@ class Post(models.Model):
         return self.title
 ```
 
-## 🔨 4.1. Make and apply migrations:
+## 🔗 Make and apply migrations:
 
 ```shell
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-# 🧰 5. Create a Serializer
+# 🧰 Create a Serializer
 
-### Inside api/serializers.py:
+### 📌 Inside api/serializers.py:
 
 ```python
 from rest_framework import serializers
@@ -94,3 +94,57 @@ class PostSerializer(serializers.ModelSerializer):
         fields = '__all__'
 ```
 
+# 🌐 Create a View
+
+### 📌 Inside api/views.py:
+
+```python
+from rest_framework import viewsets
+from .models import Post
+from .serializers import PostSerializer
+
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+```
+
+# 🛣️ Setup URLs
+
+### 📌 api/urls.py (create this file):
+
+```python
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import PostViewSet
+
+router = DefaultRouter()
+router.register(r'posts', PostViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+```
+
+### 📌 Update config/urls.py
+
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
+]
+```
+
+# 🚀 Run the Server
+
+```shell
+python manage.py runserver
+```
+
+# 🔍 Open in browser:
+
+```shell
+http://127.0.0.1:8000/api/posts/
+```
