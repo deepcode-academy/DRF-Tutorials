@@ -20,3 +20,15 @@
 - ✅ CRUD (Create, Read, Update, Delete) amallarini API orqali bajarishda
 - 🔐 Token/Session asosida authentication va permission larni tashkil qilishda
 - 🧪 API larni tez, xavfsiz va testga yaroqli qilishda juda foydalidir.
+
+## ✅ REST API NIMA?
+
+📌 REST (Representational State Transfer) — bu internet orqali resurslar (odatda ma’lumotlar) bilan ishlash usuli.
+
+📌 REST API bu:
+
+- **GET** — ma'lumot olish
+- **POST** — ma'lumot yaratish
+- **PUT/PATCH** — ma'lumotni yangilash
+- **DELETE** — ma'lumotni o‘chirish
+
