@@ -53,3 +53,20 @@ class Book(models.Model):
     # 'date' - kitob chop etilgan sana, DateField tipida saqlanadi (faqat sana, vaqt emas)
     date = models.DateField()
 ```
+
+📌 Agar siz bu modelni React frontend yoki mobil ilova bilan ulamoqchi bo‘lsangiz, sizga API kerak bo‘ladi. Django oddiy holatda bunday JSON API bermaydi. Bu yerda DRF yordamga keladi.
+
+## ✅ DRF O‘RNATISH
+
+```shell
+pip install djangorestframework  
+```
+
+📌 `settings.py` faylga DRF ni qo‘shing:
+
+```python
+INSTALLED_APPS = [
+    ...
+    'rest_framework',
+]
+```
