@@ -32,3 +32,24 @@
 - **PUT/PATCH** — ma'lumotni yangilash
 - **DELETE** — ma'lumotni o‘chirish
 
+## ✅ NEGA DRF KERAK?
+
+📌 Faraz qilaylik, sizda Kitob modeli bor:
+
+```python
+# models.py
+
+# Django framework'dan models moduli import qilinmoqda, bu model yaratish uchun kerak bo'ladi
+from django.db import models
+
+# Kitob nomli model (jadval) yaratilmoqda, u models.Model dan meros oladi
+class Book(models.Model):
+    # 'name' - kitob nomini saqlash uchun CharField, maksimal uzunligi 100 ta belgidan iborat
+    name = models.CharField(max_length=100)
+    
+    # 'author' - kitob muallifining ismi, CharField, maksimal uzunligi 100 ta belgidan iborat
+    author = models.CharField(max_length=100)
+    
+    # 'date' - kitob chop etilgan sana, DateField tipida saqlanadi (faqat sana, vaqt emas)
+    date = models.DateField()
+```
