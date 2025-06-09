@@ -67,6 +67,30 @@ pip install djangorestframework
 ```python
 INSTALLED_APPS = [
     ...
+    
+    # Django REST Framework (DRF) — bu Django uchun API yaratish imkonini beradigan kuchli kutubxona.
+    # Uni INSTALLED_APPS ga qo‘shish orqali DRF ning komponentlari (serializers, views, permissions va h.k.) loyihada ishlay oladi.
+    # Masalan, DRF yordamida JSON formatda API endpointlar, CRUD amallarini bajaruvchi class-based yoki function-based viewlar yozish mumkin.
+    # Bu qatorda 'rest_framework' yozilishi orqali DRF Django tomonidan tan olinadi va ishga tushiriladi.
     'rest_framework',
 ]
+```
+
+## ✅ DRF DA ODDIY API YARATISH
+
+### 1. Model
+
+```python
+# models.py
+
+# Book nomli model yaratilyapti, bu model bazada 'book' jadvalini ifodalaydi
+class Book(models.Model):
+    # 'name' maydoni — bu kitobning nomini saqlaydi.
+    # CharField matnli qiymatlarni saqlash uchun ishlatiladi.
+    # max_length=100 — bu maydonga kiritiladigan matn eng ko‘pi bilan 100 belgidan iborat bo‘lishi kerak.
+    name = models.CharField(max_length=100)
+    
+    # 'author' maydoni — bu kitob muallifining ismini saqlaydi.
+    # Yana CharField bo‘lib, 100 belgigacha matn qabul qiladi.
+    author = models.CharField(max_length=100)
 ```
