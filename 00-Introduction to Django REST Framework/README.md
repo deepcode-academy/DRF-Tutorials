@@ -5,7 +5,7 @@
 
 ## ✅ DJANGO REST FRAMEWORK (DRF) NIMA?
 
-📌 Django REST Framework (DRF) — bu Django asosida qurilgan kuchli va moslashuvchan kutubxona bo‘lib, RESTful API larni yaratish uchun xizmat qiladi.
+📌 DRF – bu Django REST Framework degan so‘zlarning qisqartmasi. Bu Django frameworki ustiga qo‘shimcha kutubxona bo‘lib, u orqali biz API (Application Programming Interface) yaratamiz.
 
 📌 DRF yordamida biz backend (ma’lumotlar bazasi bilan ishlovchi qism) bilan frontend yoki mobil ilovalar o‘rtasida JSON formatidagi muloqotni tashkil qilamiz.
 
