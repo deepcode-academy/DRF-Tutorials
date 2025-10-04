@@ -30,10 +30,10 @@
 
 📌 REST API bu:
 
-- **GET** — ma'lumot olish
-- **POST** — ma'lumot yaratish
-- **PUT/PATCH** — ma'lumotni yangilash
-- **DELETE** — ma'lumotni o‘chirish
+- `GET` — ma'lumot olish
+- `POST` — ma'lumot yaratish
+- `PUT/PATCH` — ma'lumotni yangilash
+- `DELETE` — ma'lumotni o‘chirish
 
 ## ✅ NEGA DRF KERAK?
 
