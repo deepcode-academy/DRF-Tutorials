@@ -79,7 +79,7 @@ INSTALLED_APPS = [
 ]
 ```
 
-## ✅ DRF DA ODDIY API YARATISH
+## ✅ DRFDA ODDIY API YARATISH
 
 ### 1. Model
 
