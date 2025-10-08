@@ -96,15 +96,8 @@ urlpatterns = [
 ```python
 # models.py
 
-# Book nomli model yaratilyapti, bu model bazada 'book' jadvalini ifodalaydi
 class Book(models.Model):
-    # 'name' maydoni — bu kitobning nomini saqlaydi.
-    # CharField matnli qiymatlarni saqlash uchun ishlatiladi.
-    # max_length=100 — bu maydonga kiritiladigan matn eng ko‘pi bilan 100 belgidan iborat bo‘lishi kerak.
     name = models.CharField(max_length=100)
-    
-    # 'author' maydoni — bu kitob muallifining ismini saqlaydi.
-    # Yana CharField bo‘lib, 100 belgigacha matn qabul qiladi.
     author = models.CharField(max_length=100)
 ```
 
