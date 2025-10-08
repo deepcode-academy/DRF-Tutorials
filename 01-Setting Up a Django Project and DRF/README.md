@@ -1,6 +1,6 @@
-# 🌐 Setting Up a Django Project and DRF
+# 🌐 SETTING UP A DJANGO PROJECT AND DRF
 
-# 🧩 Set up the environment (Virtual Environment)
+# 🧩 SET UP THE ENVIRONMENT(VIRTUAL ENVIRONMENT)
 
 # ✅ CREATE A VIRTUAL ENVIRONMENT:
 
@@ -8,7 +8,7 @@
 python -m venv env
 ```
 
-# ✅ Activate the virtual environment:
+# ✅ ACTIVATE THE VIRTUAL ENVIRONMENT:
 ### Windows
 
 ```shell
@@ -21,7 +21,7 @@ env\Scripts\activate
 source venv/bin/activate
 ```
 
-# ✅ Install Django and DRF:
+# ✅ INSTALL DJANGO AND DRF:
 
 ```shell
 pip install django
@@ -31,9 +31,9 @@ pip install django
 pip install djangorestframework
 ```
 
-# ✅ Create Django Project and App
+# ✅ CREATE DJANGO PROJECT AND APP:
 
-## 📌 Create Django project:
+## ❇️ Create Django project:
 
 ```shell
 django-admin startproject config .
