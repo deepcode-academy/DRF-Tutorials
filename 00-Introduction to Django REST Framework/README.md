@@ -176,7 +176,7 @@ def student_list(request):
 
 # ✅ AMALIYOT
 
-## Simple Book API
+## ❇️ Simple Book API
 
 1. Django loyihasi va books ilovasini yaratish.
 2. Kitoblar modeli yaratish (title, author, published_year).
