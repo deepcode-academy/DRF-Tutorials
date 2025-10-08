@@ -143,7 +143,7 @@ def student_list(request):
 - many=True → ko‘p obyektlarni JSON formatga aylantirish uchun
 - serializer.data → JSON ma’lumotlar
 
-### ✳️ 4. URLS
+### ✳️ 4. urls
 
 ```python
 # urls.py
