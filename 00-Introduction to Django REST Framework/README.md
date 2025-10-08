@@ -101,6 +101,16 @@ class Book(models.Model):
     author = models.CharField(max_length=100)
 ```
 
-```python
+📌 **DRF da serializer** – bu Django modelidagi ma’lumotlarni JSON, XML yoki boshqa formatlarga o‘tkazish uchun ishlatiladigan vosita. Shu bilan birga, u ma’lumotlarni tekshirish (validation) va yaratish/yangilash (create/update) imkonini beradi. 
 
+```python
+# serializers.py
+
+from rest_framework import serializers
+from .models import Student
+
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = ['id', 'name', 'age', 'email']
 ``` 
