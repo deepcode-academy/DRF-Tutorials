@@ -89,9 +89,9 @@ urlpatterns = [
 ]
 ```
 
-## ✅ DRFDA ODDIY API YARATISH
+## ❇️ DRFDA ODDIY API YARATISH
 
-### 1. Model
+### ✳️ 1. Model
 
 ```python
 # models.py
@@ -107,7 +107,7 @@ class Student(models.Model):
         return self.name
 ```
 
-### 2. Serializers
+### ✳️ 2. Serializers
 
 📌 **DRF da serializer** – bu Django modelidagi ma’lumotlarni JSON, XML yoki boshqa formatlarga o‘tkazish uchun ishlatiladigan vosita. Shu bilan birga, u ma’lumotlarni tekshirish (validation) va yaratish/yangilash (create/update) imkonini beradi. 
 
@@ -123,7 +123,7 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'age', 'email']
 ```
 
-### 3. Views
+### ✳️ 3. Views
 
 ```python
 # views.py
@@ -143,7 +143,7 @@ def student_list(request):
 - many=True → ko‘p obyektlarni JSON formatga aylantirish uchun
 - serializer.data → JSON ma’lumotlar
 
-### 4. URLS
+### ✳️ 4. URLS
 
 ```python
 # urls.py
@@ -156,7 +156,7 @@ urlpatterns = [
 ]
 ```
 
-📌 POST so‘rov bilan yangi student qo‘shish
+### ✳️ POST so‘rov bilan yangi student qo‘shish
 
 ```python
 @api_view(['GET', 'POST'])
