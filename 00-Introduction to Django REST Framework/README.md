@@ -173,3 +173,16 @@ def student_list(request):
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)     # Xato bo‘lsa
 ```
+
+# AMALIYOT
+
+## Simple Book API
+
+1. Django loyihasi va books ilovasini yaratish.
+2. Kitoblar modeli yaratish (title, author, published_year).
+3. Modelni ma’lumotlar bazasiga tatbiq qilish (migratsiyalar).
+4. Modelni admin panelda ro‘yxatga olish va kitoblar qo‘shish.
+5. Serializer yaratish (model → JSON).
+6. Faqat GET operatsiyasi qiladigan API view yaratish.
+7. Endpoint URLini sozlash.
+8. Brauzer yoki Postman orqali APIni test qilish (kitoblar ro‘yxatini olish).
