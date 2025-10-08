@@ -149,3 +149,21 @@ urlpatterns = [
     path('students/', student_list),
 ]
 ```
+
+📌 POST so‘rov bilan yangi student qo‘shish
+
+```python
+@api_view(['GET', 'POST'])
+def student_list(request):
+    if request.method == 'GET':
+        students = Student.objects.all()
+        serializer = StudentSerializer(students, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        serializer = StudentSerializer(data=request.data)  # Foydalanuvchidan ma'lumot olish
+        if serializer.is_valid():                           # Tekshirish
+            serializer.save()                               # Bazaga saqlash
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)     # Xato bo‘lsa
+```
