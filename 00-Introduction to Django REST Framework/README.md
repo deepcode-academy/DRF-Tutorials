@@ -96,9 +96,15 @@ urlpatterns = [
 ```python
 # models.py
 
-class Book(models.Model):
-    name = models.CharField(max_length=100)
-    author = models.CharField(max_length=100)
+from django.db import models
+
+class Student(models.Model):
+    name = models.CharField(max_length=50)
+    age = models.IntegerField()
+    email = models.EmailField()
+
+    def __str__(self):
+        return self.name
 ```
 
 📌 **DRF da serializer** – bu Django modelidagi ma’lumotlarni JSON, XML yoki boshqa formatlarga o‘tkazish uchun ishlatiladigan vosita. Shu bilan birga, u ma’lumotlarni tekshirish (validation) va yaratish/yangilash (create/update) imkonini beradi. 
@@ -113,4 +119,33 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = ['id', 'name', 'age', 'email']
-``` 
+```
+
+```python
+# views.py
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Student
+from .serializers import StudentSerializer
+
+@api_view(['GET'])
+def student_list(request):
+    students = Student.objects.all()          # Barcha studentlarni olish
+    serializer = StudentSerializer(students, many=True)  # JSONga aylantirish
+    return Response(serializer.data)          # Foydalanuvchiga yuborish
+```
+
+- many=True → ko‘p obyektlarni JSON formatga aylantirish uchun
+- serializer.data → JSON ma’lumotlar
+
+```python
+# urls.py
+
+from django.urls import path
+from .views import student_list
+
+urlpatterns = [
+    path('students/', student_list),
+]
+```
