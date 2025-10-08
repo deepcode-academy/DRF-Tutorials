@@ -174,7 +174,7 @@ def student_list(request):
         return Response(serializer.errors, status=400)     # Xato bo‘lsa
 ```
 
-# AMALIYOT
+# ✅ AMALIYOT
 
 ## Simple Book API
 
