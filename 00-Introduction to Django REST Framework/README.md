@@ -79,6 +79,16 @@ INSTALLED_APPS = [
 ]
 ```
 
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
+]
+```
+
 ## ✅ DRFDA ODDIY API YARATISH
 
 ### 1. Model
@@ -97,3 +107,7 @@ class Book(models.Model):
     # Yana CharField bo‘lib, 100 belgigacha matn qabul qiladi.
     author = models.CharField(max_length=100)
 ```
+
+```python
+
+``` 
