@@ -2,13 +2,13 @@
 
 # 🧩 Set up the environment (Virtual Environment)
 
-## ❇️ Create a virtual environment:
+# ✅ CREATE A VIRTUAL ENVIRONMENT:
 
 ```shell
 python -m venv env
 ```
 
-## ❇️ Activate the virtual environment:
+# ✅ Activate the virtual environment:
 ### Windows
 
 ```shell
@@ -21,7 +21,7 @@ env\Scripts\activate
 source venv/bin/activate
 ```
 
-## ❇️ Install Django and DRF:
+# ✅ Install Django and DRF:
 
 ```shell
 pip install django
