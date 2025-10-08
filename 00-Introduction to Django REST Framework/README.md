@@ -107,6 +107,8 @@ class Student(models.Model):
         return self.name
 ```
 
+### 2. Serializers
+
 📌 **DRF da serializer** – bu Django modelidagi ma’lumotlarni JSON, XML yoki boshqa formatlarga o‘tkazish uchun ishlatiladigan vosita. Shu bilan birga, u ma’lumotlarni tekshirish (validation) va yaratish/yangilash (create/update) imkonini beradi. 
 
 ```python
@@ -120,6 +122,8 @@ class StudentSerializer(serializers.ModelSerializer):
         model = Student
         fields = ['id', 'name', 'age', 'email']
 ```
+
+### 3. Views
 
 ```python
 # views.py
@@ -138,6 +142,8 @@ def student_list(request):
 
 - many=True → ko‘p obyektlarni JSON formatga aylantirish uchun
 - serializer.data → JSON ma’lumotlar
+
+### 4. URLS
 
 ```python
 # urls.py
