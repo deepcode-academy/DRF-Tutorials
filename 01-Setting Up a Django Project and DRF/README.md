@@ -1,4 +1,4 @@
-#  *️⃣ Setting Up a Django Project and DRF
+# 🌐 Setting Up a Django Project and DRF
 
 # 📌 Set up the environment (Virtual Environment)
 
