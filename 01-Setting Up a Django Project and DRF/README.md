@@ -2,7 +2,7 @@
 
 # 🧩 SET UP THE ENVIRONMENT(VIRTUAL ENVIRONMENT)
 
-# ✅ CREATE A VIRTUAL ENVIRONMENT:
+## ✅ CREATE A VIRTUAL ENVIRONMENT:
 
 ```shell
 python -m venv env
@@ -40,15 +40,14 @@ django-admin startproject config .
 cd config
 ```
 
-## 📌 Create Django app:
+## ❇️ Create Django app:
 
 ```shell
 python manage.py startapp api
 ```
 
-# ⚙️ Configure settings.py
-
-## 📌 Add apps to INSTALLED_APPS:
+# ✅ CONFIGURE SETTINGS 
+# 📌 Add apps to INSTALLED_APPS:
 
 ```python
 INSTALLED_APPS = [
