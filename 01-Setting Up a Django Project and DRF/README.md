@@ -2,27 +2,25 @@
 
 # 🧩 1-DARS SETTING UP A DJANGO PROJECT AND DRF
 
-# Django va Django REST Framework bilan loyiha sozlash
 
-Bu darsda Django va Django REST Framework (DRF) yordamida loyiha yaratishni va oddiy API sozlashni o'rganamiz. Har bir qadamni sodda va aniq tushuntiraman.
+## ❇️ MUHITNI TAYYORLASH
 
-## 1. Muhitni tayyorlash
-Django va DRF bilan ishlash uchun Python o'rnatilgan bo'lishi kerak. Quyidagi qadamlar bilan muhitni sozlaymiz:
+### ✳️ **Virtual muhit yaratish**:
 
-- **Python o'rnatish**: Python 3.8 yoki undan yuqori versiyani o'rnating (https://www.python.org/downloads/).
-- **Virtual muhit yaratish**:
-  ```bash
+📌 Virtual muhit loyiha uchun alohida yaratadi, bu boshqa loyihalarga ta'sir qilmaslikni ta'minlaydi.
+
+```shell
   python -m venv env
-  source env/bin/activate  # Windows uchun: env\Scripts\activate
+  env\Scripts\activate 
   ```
-  Virtual muhit loyiha uchun alohida muhit yaratadi, bu boshqa loyihalarga ta'sir qilmaslikni ta'minlaydi.
-- **Django va DRF o'rnatish**:
+
+### ✳️ **Django va DRF o'rnatish**:
   ```bash
   pip install django djangorestframework
   ```
-  Bu Django va DRF kutubxonalarini o'rnatadi.
+- Bu Django va DRF kutubxonalarini o'rnatadi.
 
-## 2. Django loyihasini yaratish
+## ❇️ DJANGO LOYIHASINI YARATISH
 Django loyihasini boshlash uchun quyidagi qadamlar:
 
 - **Loyiha yaratish**:
