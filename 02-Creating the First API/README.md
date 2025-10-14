@@ -118,5 +118,3 @@ admin.site.register(Task)
    curl -X POST http://127.0.0.1:8000/tasks/ -d "title=Test vazifa&completed=true"
    ```
 
-## ✅ XULOSA
-Bu darsda siz DRF yordamida birinchi API ni yaratdingiz. `Task` modeli asosida vazifalar ro'yxatini boshqarish uchun API endpoint sozladik. Keyingi qadamlar sifatida autentifikatsiya, ruxsatlar va filtrlash kabi qo'shimcha funksiyalarni qo'shishingiz mumkin.
