@@ -10,14 +10,14 @@
 📌 Virtual muhit loyiha uchun alohida yaratadi, bu boshqa loyihalarga ta'sir qilmaslikni ta'minlaydi.
 
 ```shell
-  python -m venv env
-  env\Scripts\activate 
-  ```
+python -m venv env
+env\Scripts\activate 
+```
 
 ### ✳️ **Django va DRF o'rnatish**:
-  ```bash
-  pip install django djangorestframework
-  ```
+```bash
+pip install django djangorestframework
+```
 - Bu Django va DRF kutubxonalarini o'rnatadi.
 
 ## ❇️ DJANGO LOYIHASINI YARATISH
