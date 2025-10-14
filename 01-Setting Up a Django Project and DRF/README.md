@@ -4,20 +4,20 @@
 
 ## ✅ LOYIHANI ISHGA TUSHURISH
 
-### ✅ VIRTUAL MUHIT YARATISH:
+### ❇️ VIRTUAL MUHITNI SOZLASH
+
+📌 Virtual muhitni o'rnatish
 
 ```shell
 python -m venv env
 ```
-
-# ✅ ACTIVATE THE VIRTUAL ENVIRONMENT:
-### Windows
+📌 Windows uchun active qilish
 
 ```shell
 env\Scripts\activate
 ```
 
-### Linux/macOS:
+📌 Linux/macOS uchun active qilish
 
 ```shell
 source venv/bin/activate
