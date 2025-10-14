@@ -1,153 +1,164 @@
 # 🌐 DJANGO REST FRAMEWORK ASOSLARI
 
-# 🧩 SETTING UP A DJANGO PROJECT AND DRF
+# 🧩 1-DARS SETTING UP A DJANGO PROJECT AND DRF
 
-## ✅ LOYIHANI ISHGA TUSHURISH
+# Django va Django REST Framework bilan loyiha sozlash
 
-### ❇️ VIRTUAL MUHITNI SOZLASH
+Bu darsda Django va Django REST Framework (DRF) yordamida loyiha yaratishni va oddiy API sozlashni o'rganamiz. Har bir qadamni sodda va aniq tushuntiraman.
 
-📌 Virtual muhitni o'rnatish
+## 1. Muhitni tayyorlash
+Django va DRF bilan ishlash uchun Python o'rnatilgan bo'lishi kerak. Quyidagi qadamlar bilan muhitni sozlaymiz:
 
-```shell
-python -m venv env
-```
-📌 Windows uchun active qilish
+- **Python o'rnatish**: Python 3.8 yoki undan yuqori versiyani o'rnating (https://www.python.org/downloads/).
+- **Virtual muhit yaratish**:
+  ```bash
+  python -m venv env
+  source env/bin/activate  # Windows uchun: env\Scripts\activate
+  ```
+  Virtual muhit loyiha uchun alohida muhit yaratadi, bu boshqa loyihalarga ta'sir qilmaslikni ta'minlaydi.
+- **Django va DRF o'rnatish**:
+  ```bash
+  pip install django djangorestframework
+  ```
+  Bu Django va DRF kutubxonalarini o'rnatadi.
 
-```shell
-env\Scripts\activate
-```
+## 2. Django loyihasini yaratish
+Django loyihasini boshlash uchun quyidagi qadamlar:
 
-📌 Linux/macOS uchun active qilish
+- **Loyiha yaratish**:
+  ```bash
+  django-admin startproject myproject
+  cd myproject
+  ```
+  Bu `myproject` nomli yangi loyiha jildini yaratadi.
+- **Loyha tuzilishi**:
+  ```
+  myproject/
+  ├── manage.py
+  ├── myproject/
+  │   ├── __init__.py
+  │   ├── settings.py
+  │   ├── urls.py
+  │   ├── asgi.py
+  │   └── wsgi.py
+  ```
+  - `manage.py`: Loyiha boshqaruvi uchun asosiy fayl.
+  - `settings.py`: Loyiha sozlamalari.
+  - `urls.py`: URL marshrutlari.
 
-```shell
-source venv/bin/activate
-```
+- **Serverni ishga tushirish**:
+  ```bash
+  python manage.py runserver
+  ```
+  Brauzerda `http://127.0.0.1:8000/` manziliga o'ting. "Django welcome" sahifasini ko'rasiz.
 
-### ❇️ DJANGO REST FRAMEWORKNI O'RNATISH:
+## 3. Django ilovasini yaratish
+Django loyihasida ilovalar (apps) alohida modullar sifatida ishlaydi.
 
-```shell
-pip install djangorestframework
-```
+- **Ilova yaratish**:
+  ```bash
+  python manage.py startapp myapp
+  ```
+  Bu `myapp` nomli ilova jildini yaratadi.
 
-# ✅ CREATE DJANGO PROJECT AND APP:
+- **Ilovani loyihaga qo'shish**:
+  `myproject/settings.py` faylini oching va `INSTALLED_APPS` ro'yxatiga quyidagini qo'shing:
+  ```python
+  INSTALLED_APPS = [
+      ...
+      'myapp',
+      'rest_framework',  # DRF ni qo'shamiz
+  ]
+  ```
 
-## ❇️ Create Django project:
+## 4. Ma'lumotlar bazasini sozlash
+Django standart ravishda SQLite bilan ishlaydi, bu oddiy loyihalar uchun yetarli.
 
-```shell
-django-admin startproject config .
-cd config
-```
+- **Model yaratish**:
+  `myapp/models.py` faylida oddiy model yaratamiz:
+  ```python
+  from django.db import models
 
-## ❇️ Create Django app:
+  class Item(models.Model):
+      name = models.CharField(max_length=100)
+      description = models.TextField()
+      created_at = models.DateTimeField(auto_now_add=True)
 
-```shell
-python manage.py startapp api
-```
+      def __str__(self):
+          return self.name
+  ```
 
-# ✅ CONFIGURE SETTINGS 
-# 📌 Add apps to INSTALLED_APPS:
+- **Migratsiyalarni yaratish va qo'llash**:
+  ```bash
+  python manage.py makemigrations
+  python manage.py migrate
+  ```
+  Bu modelni ma'lumotlar bazasida jadvallar sifatida yaratadi.
 
-```python
-INSTALLED_APPS = [
-    # ...
-    'rest_framework',
-    'api',
-]
-```
+## 5. DRF bilan API yaratish
+DRF yordamida oddiy API yaratamiz.
 
-# 📦 Create a Model (e.g. Post model)
+- **Serializer yaratish**:
+  `myapp/serializers.py` faylini yarating va quyidagi kodni qo'shing:
+  ```python
+  from rest_framework import serializers
+  from .models import Item
 
-### 📌 Inside api/models.py:
+  class ItemSerializer(serializers.ModelSerializer):
+      class Meta:
+          model = Item
+          fields = ['id', 'name', 'description', 'created_at']
+  ```
 
-```python
-from django.db import models
+- **View yaratish**:
+  `myapp/views.py` faylida API view yaratamiz:
+  ```python
+  from rest_framework import viewsets
+  from .models import Item
+  from .serializers import ItemSerializer
 
-class Post(models.Model):
-    title = models.CharField(max_length=100)
-    content = models.TextField()
+  class ItemViewSet(viewsets.ModelViewSet):
+      queryset = Item.objects.all()
+      serializer_class = ItemSerializer
+  ```
 
-    def __str__(self):
-        return self.title
-```
+- **URL sozlash**:
+  `myproject/urls.py` faylini yangilang:
+  ```python
+  from django.urls import path, include
+  from rest_framework.routers import DefaultRouter
+  from myapp.views import ItemViewSet
 
-🧠 Explanation:
-- `models.Model` – bu `Post` class Django model ekanini bildiradi.
-- `title = models.CharField(...)` – bu sarlavha uchun maxsus ustun bo‘lib, 100ta belgigacha matn qabul qiladi.
-- `content = models.TextField()` – bu post matni uchun, uzun matnlarni saqlashga mo‘ljallangan.
-- `__str__` – admin panelda model obyektining ko‘rinishini o‘zgartiradi (sarlavhani ko‘rsatadi).
+  router = DefaultRouter()
+  router.register(r'items', ItemViewSet)
 
-## 🔗 Make and apply migrations:
+  urlpatterns = [
+      path('', include(router.urls)),
+  ]
+  ```
 
-```shell
-python manage.py makemigrations
-python manage.py migrate
-```
+## 6. API ni sinab ko'rish
+- Serverni ishga tushiring:
+  ```bash
+  python manage.py runserver
+  ```
+- Brauzerda `http://127.0.0.1:8000/items/` manziliga o'ting. DRF interfeysi orqali ma'lumotlarni ko'rishingiz, qo'shishingiz va o'zgartirishingiz mumkin.
 
-# 🧰 Create a Serializer
+## 7. Ma'lumot qo'shish (ixtiyoriy)
+Django admin paneli orqali ma'lumot qo'shish uchun:
 
-### 📌 Inside api/serializers.py:
+- **Admin foydalanuvchisini yaratish**:
+  ```bash
+  python manage.py createsuperuser
+  ```
+- `myapp/admin.py` faylida modelni ro'yxatdan o'tkazing:
+  ```python
+  from django.contrib import admin
+  from .models import Item
 
-```python
-from rest_framework import serializers
-from .models import Post
+  admin.site.register(Item)
+  ```
+- `http://127.0.0.1:8000/admin/` manzilida admin paneliga kiring va ma'lumot qo'shing.
 
-class PostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Post
-        fields = '__all__'
-```
-
-# 🌐 Create a View
-
-### 📌 Inside api/views.py:
-
-```python
-from rest_framework import viewsets
-from .models import Post
-from .serializers import PostSerializer
-
-class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-```
-
-# 🛣️ Setup URLs
-
-### 📌 api/urls.py (create this file):
-
-```python
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import PostViewSet
-
-router = DefaultRouter()
-router.register(r'posts', PostViewSet)
-
-urlpatterns = [
-    path('', include(router.urls)),
-]
-```
-
-### 📌 Update config/urls.py
-
-```python
-from django.contrib import admin
-from django.urls import path, include
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('api.urls')),
-]
-```
-
-# 🚀 Run the Server
-
-```shell
-python manage.py runserver
-```
-
-# 🔍 Open in browser:
-
-```shell
-http://127.0.0.1:8000/api/posts/
-```
+## Xulosa
+Bu darsda siz Django loyihasini noldan boshlab, DRF yordamida oddiy API yaratishni o'rgandingiz. Keyingi qadamlar sifatida autentifikatsiya, ruxsatlar va murakkab API funksiyalarini qo'shishingiz mumkin.
