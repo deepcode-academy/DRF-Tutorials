@@ -29,27 +29,31 @@ pip install django djangorestframework
 django-admin startproject myproject .
 
 ```
-  Bu `myproject` nomli yangi loyiha jildini yaratadi.
-- **Loyha tuzilishi**:
-  ```
-  myproject/
-  ├── manage.py
-  ├── myproject/
-  │   ├── __init__.py
-  │   ├── settings.py
-  │   ├── urls.py
-  │   ├── asgi.py
-  │   └── wsgi.py
-  ```
-  - `manage.py`: Loyiha boshqaruvi uchun asosiy fayl.
-  - `settings.py`: Loyiha sozlamalari.
-  - `urls.py`: URL marshrutlari.
+📌 Bu `myproject` nomli yangi loyiha jildini yaratadi.
 
-- **Serverni ishga tushirish**:
-  ```bash
-  python manage.py runserver
-  ```
-  Brauzerda `http://127.0.0.1:8000/` manziliga o'ting. "Django welcome" sahifasini ko'rasiz.
+### ❇️ **Loyha tuzilishi**:
+```
+myproject/
+├── manage.py
+├── myproject/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   ├── asgi.py
+│   └── wsgi.py
+```
+
+- `manage.py`: Loyiha boshqaruvi uchun asosiy fayl.
+- `settings.py`: Loyiha sozlamalari.
+- `urls.py`: URL marshrutlari.
+
+### ❇️ **Serverni ishga tushirish**:
+  
+```bash
+python manage.py runserver
+```
+
+📌 Brauzerda `http://127.0.0.1:8000/` manziliga o'ting. "Django welcome" sahifasini ko'rasiz.
 
 ## 3. Django ilovasini yaratish
 Django loyihasida ilovalar (apps) alohida modullar sifatida ishlaydi.
