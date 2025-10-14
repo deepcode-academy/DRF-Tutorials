@@ -3,31 +3,32 @@
 # 🧩 1-DARS SETTING UP A DJANGO PROJECT AND DRF
 
 
-## ❇️ MUHITNI TAYYORLASH
+## ✅ MUHITNI TAYYORLASH
 
-### ✳️ **Virtual muhit yaratish**:
+### ❇️ **Virtual muhit yaratish**:
 
 📌 Virtual muhit loyiha uchun alohida yaratadi, bu boshqa loyihalarga ta'sir qilmaslikni ta'minlaydi.
 
 ```shell
 python -m venv env
-env\Scripts\activate 
+env\Scripts\activate
 ```
 
-### ✳️ **Django va DRF o'rnatish**:
+### ❇️ **Django va DRF o'rnatish**:
 ```bash
 pip install django djangorestframework
 ```
 - Bu Django va DRF kutubxonalarini o'rnatadi.
 
-## ❇️ DJANGO LOYIHASINI YARATISH
-Django loyihasini boshlash uchun quyidagi qadamlar:
+## ✅ DJANGO LOYIHASINI YARATISH
+📌 Django loyihasini boshlash uchun quyidagi qadamlar:
 
-- **Loyiha yaratish**:
-  ```bash
-  django-admin startproject myproject
-  cd myproject
-  ```
+### ❇️ **Loyiha yaratish**:
+
+```bash
+django-admin startproject myproject .
+
+```
   Bu `myproject` nomli yangi loyiha jildini yaratadi.
 - **Loyha tuzilishi**:
   ```
