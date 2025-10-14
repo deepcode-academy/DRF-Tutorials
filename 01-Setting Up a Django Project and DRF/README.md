@@ -23,11 +23,7 @@ env\Scripts\activate
 source venv/bin/activate
 ```
 
-# ✅ INSTALL DJANGO AND DRF:
-
-```shell
-pip install django
-```
+### ❇️ DJANGO REST FRAMEWORKNI O'RNATISH:
 
 ```shell
 pip install djangorestframework
