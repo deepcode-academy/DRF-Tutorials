@@ -1,2 +1,1 @@
-# DRF-Tutorials
-Django Rest Framework
+# DJANGO REST FRAMEWORK ASOSLARI
