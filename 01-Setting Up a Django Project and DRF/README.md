@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 1-DARS: DJANGO LOYIHASI VA DRF SOZLASH
 
 Bu darsda Django va Django REST Framework (DRF) yordamida loyiha yaratish va oddiy API sozlashni bosqichma-bosqich o'rganamiz. Har bir qadam tushunarli va aniq bo'ladi.
