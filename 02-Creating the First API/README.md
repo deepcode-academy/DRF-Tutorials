@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 2-DARS: BIRINCHI API NI YARATISH
 
 Bu darsda Django REST Framework (DRF) yordamida birinchi API ni bosqichma-bosqich yaratamiz. Har bir qadam tushunarli va faqat API yaratishga qaratilgan bo'ladi. Oldingi darsda sozlangan `myproject` loyihasi va `myapp` ilovasi asosida davom etamiz.
