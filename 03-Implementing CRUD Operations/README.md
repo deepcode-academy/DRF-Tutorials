@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 3-DARS: CRUD OPERATSIYALARINI FUNCTION-BASED VIEWS BILAN AMALGA OSHIRISH
 
 Bu darsda Django REST Framework (DRF) yordamida CRUD (Create, Read, Update, Delete) operatsiyalarini function-based views (FBV) yordamida bosqichma-bosqich amalga oshiramiz. Har bir qadam tushunarli va faqat CRUD operatsiyalariga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli asosida davom etamiz.
