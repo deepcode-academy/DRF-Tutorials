@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 6-DARS: VIEWSETS VA ROUTERS BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) yordamida ViewSets va Routers dan foydalanib, API endpointlarini samarali sozlashni bosqichma-bosqich o'rganamiz. ViewSets va Routers kod yozishni soddalashtiradi va URL marshrutlarini avtomatlashtiradi. Har bir qadam tushunarli va faqat ViewSets va Routers ga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli asosida davom etamiz.
