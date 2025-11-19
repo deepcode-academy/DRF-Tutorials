@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 7-DARS: AUTENTIFIKATSIYA (TOKEN-GA ASOSLANGAN AUTENTIFIKATSIYA)
 
 Bu darsda Django REST Framework (DRF) yordamida token-ga asoslangan autentifikatsiyani sozlashni bosqichma-bosqich o'rganamiz. Token autentifikatsiyasi API ga xavfsiz kirishni ta'minlaydi. Har bir qadam tushunarli va faqat token autentifikatsiyasiga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli asosida davom etamiz.
