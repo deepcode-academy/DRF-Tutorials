@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 8-DARS: RUXSATLAR BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) yordamida ruxsatlar (permissions) ni sozlashni bosqichma-bosqich o'rganamiz. Ruxsatlar API resurslariga kirishni nazorat qiladi va foydalanuvchilarga faqat ruxsat berilgan amallarni bajarishga imkon beradi. Har bir qadam tushunarli va faqat ruxsatlarga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli va token autentifikatsiyasi asosida davom etamiz.
