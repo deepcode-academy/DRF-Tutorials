@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 9-DARS: THROTTLING VA RATE LIMITING BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) yordamida throttling (so'rov cheklovi) va rate limiting (tezlikni cheklash) ni sozlashni bosqichma-bosqich o'rganamiz. Throttling API resurslarini ortiqcha ishlatishni oldini oladi va serverni himoya qiladi. Har bir qadam tushunarli va faqat throttling va rate limiting ga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, token autentifikatsiyasi va ruxsatlar asosida davom etamiz.
