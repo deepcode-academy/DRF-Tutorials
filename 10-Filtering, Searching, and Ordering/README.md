@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 10-DARS: FILTRLASH, QIDIRISH VA TARTIBLASH
 
 Bu darsda Django REST Framework (DRF) yordamida ma'lumotlarni filtrlash, qidirish va tartiblash funksiyalarini sozlashni bosqichma-bosqich o'rganamiz. Bu funksiyalar API dan olingan ma'lumotlarni foydalanuvchi ehtiyojlariga moslashtirishga yordam beradi. Har bir qadam tushunarli va faqat filtrlash, qidirish va tartiblashga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, token autentifikatsiyasi va ruxsatlar asosida davom etamiz.
