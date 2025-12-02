@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 11-DARS: SAHIFALASH BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) yordamida sahifalash (pagination) ni sozlashni bosqichma-bosqich o'rganamiz. Sahifalash katta hajmdagi ma'lumotlarni kichik qismlarga bo'lib, API javoblarini optimallashtiradi va foydalanuvchi tajribasini yaxshilaydi. Har bir qadam tushunarli va faqat sahifalashga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, token autentifikatsiyasi, ruxsatlar va filtrlash asosida davom etamiz.
