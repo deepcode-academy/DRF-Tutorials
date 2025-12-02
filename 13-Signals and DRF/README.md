@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 13-DARS: SIGNALLAR VA DRF BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) yordamida Django signallari bilan ishlashni bosqichma-bosqich o'rganamiz. Signallar ma'lumotlar bazasidagi o'zgarishlarga (masalan, yangi obyekt yaratilishi yoki o'chirilishi) avtomatik ravishda javob berish imkonini beradi. Har bir qadam tushunarli va faqat signallar va DRF integratsiyasiga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, JWT autentifikatsiyasi, ruxsatlar va sahifalash asosida davom etamiz.
