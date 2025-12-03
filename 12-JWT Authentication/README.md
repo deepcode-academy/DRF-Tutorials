@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 12-DARS: JWT AUTENTIFIKATSIYASI BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) yordamida JSON Web Token (JWT) autentifikatsiyasini sozlashni bosqichma-bosqich o'rganamiz. JWT autentifikatsiyasi token-ga asoslangan autentifikatsiyaning zamonaviy va xavfsiz shakli bo'lib, foydalanuvchi ma'lumotlarini token ichida saqlaydi. Har bir qadam tushunarli va faqat JWT autentifikatsiyasiga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, ruxsatlar va sahifalash asosida davom etamiz.
