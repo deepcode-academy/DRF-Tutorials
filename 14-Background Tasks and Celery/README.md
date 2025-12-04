@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 14-DARS: FON VAZIFALARI VA CELERY BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) yordamida fon vazifalarini (background tasks) va Celery bilan ishlashni bosqichma-bosqich o'rganamiz. Celery uzoq davom etadigan yoki resurs talab qiladigan vazifalarni asinxron tarzda bajarish uchun ishlatiladi. Har bir qadam tushunarli va faqat fon vazifalari va Celery ga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, JWT autentifikatsiyasi, ruxsatlar va signallar asosida davom etamiz.
