@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 15-DARS: API TESTLARI VA UNIT TESTLARI BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) yordamida API testlari va unit testlarini yozishni bosqichma-bosqich o'rganamiz. Testlar loyihaning to'g'ri ishlashini ta'minlaydi va kod sifatini oshiradi. Har bir qadam tushunarli va faqat API va unit testlariga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, JWT autentifikatsiyasi, ruxsatlar, sahifalash va Celery asosida davom etamiz.
