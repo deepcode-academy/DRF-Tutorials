@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 16-DARS: KESHLASH VA ISHLASHNI OPTIMALASHTIRISH
 
 Bu darsda Django REST Framework (DRF) yordamida keshlash (caching) va ishlashni optimallashtirish usullarini bosqichma-bosqich o'rganamiz. Keshlash API javoblarini tezkorlashtiradi va server yukini kamaytiradi. Har bir qadam tushunarli va faqat keshlash va ishlash optimallashtirishga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, JWT autentifikatsiyasi, ruxsatlar, sahifalash, signallar va Celery asosida davom etamiz.
