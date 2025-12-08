@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 17-DARS: WEBSOCKETS VA DJANGO CHANNELS BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) va Django Channels yordamida WebSocket integratsiyasini sozlashni bosqichma-bosqich o'rganamiz. WebSocket real vaqtda ikki tomonlama aloqani ta'minlaydi, masalan, vazifa yaratilganda foydalanuvchilarga bildirishnoma yuborish uchun. Har bir qadam tushunarli va faqat WebSocket va Django Channels ga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, JWT autentifikatsiyasi, ruxsatlar, sahifalash, Celery va keshlash asosida davom etamiz.
