@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 18-DARS: JOYLASHTIRISH VA DOCKER BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) loyihasini Docker yordamida joylashtirishni bosqichma-bosqich o'rganamiz. Docker loyihani izolyatsiya qilingan konteynerlarda ishlatish imkonini beradi, bu esa uni turli muhitlarda barqaror ishlashini ta'minlaydi. Har bir qadam tushunarli va faqat joylashtirish va Docker ga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, JWT autentifikatsiyasi, ruxsatlar, sahifalash, Celery, keshlash va WebSocket (Django Channels) asosida davom etamiz.
