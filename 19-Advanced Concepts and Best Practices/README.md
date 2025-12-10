@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 19-DARS: ILG'OR TUSHUNCHALAR VA ENG YAXSHI AMALIYOTLAR
 
 Bu darsda Django REST Framework (DRF) da ilg'or tushunchalar va eng yaxshi amaliyotlarni bosqichma-bosqich o'rganamiz. Biz API versioning, DRF-spectacular bilan avtomatik API hujjatlari, maxsus xatolik boshqaruvi va loyiha sifatini oshirish uchun eng yaxshi amaliyotlarni ko'rib chiqamiz. Har bir qadam tushunarli va faqat ilg'or tushunchalar va amaliyotlarga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, JWT autentifikatsiyasi, ruxsatlar, sahifalash, Celery, keshlash, WebSocket va Docker asosida davom etamiz.
