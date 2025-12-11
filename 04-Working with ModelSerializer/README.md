@@ -1,5 +1,3 @@
-# 🌐 DJANGO REST FRAMEWORK ASOSLARI
-
 # 🧩 4-DARS: MODELSERIALIZER BILAN ISHLASH
 
 Bu darsda Django REST Framework (DRF) yordamida `ModelSerializer` sinfidan foydalanib, ma'lumotlarni seriyalash va deserialash jarayonlarini bosqichma-bosqich o'rganamiz. Har bir qadam tushunarli va faqat `ModelSerializer` ga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli asosida davom etamiz.
