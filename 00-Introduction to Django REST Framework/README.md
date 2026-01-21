@@ -1,5 +1,20 @@
 # 🧩 INTRODUCTION TO DJANGO REST FRAMEWORK
 
+## 🔍 QISQACHA TUSHUNCHA
+
+**Django REST Framework (DRF)** - Django framework ustiga qurilgan kuchli kutubxona bo'lib, u orqali RESTful API yaratish juda osonlashadi.
+
+**Oddiy qilib aytganda:**
+- 📱 Mobil ilovalar uchun backend API yaratish
+- ⚛️ React, Vue, Angular kabi frontend framework'lar bilan ishlash
+- 🔄 Ma'lumotlarni JSON formatida uzatish
+- 🔐 Token-based autentifikatsiya va xavfsizlik
+- ⚡ Tez va samarali API yaratish imkoniyati
+
+> **Django** HTML sahifalar yaratsa, **DRF** esa sof ma'lumotlar (JSON) bilan ishlaydigan API yaratadi.
+
+---
+
 ## ✅ DJANGO REST FRAMEWORK (DRF) NIMA?
 
 📌 DRF – bu Django REST Framework degan so‘zlarning qisqartmasi. Bu Django frameworki ustiga qo‘shimcha kutubxona bo‘lib, u orqali biz API (Application Programming Interface) yaratamiz.
