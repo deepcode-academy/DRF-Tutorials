@@ -1,295 +1,769 @@
-# 🧩 18-DARS: JOYLASHTIRISH VA DOCKER BILAN ISHLASH
+# 🚀 18-DARS: DEPLOYMENT VA DOCKER
 
-Bu darsda Django REST Framework (DRF) loyihasini Docker yordamida joylashtirishni bosqichma-bosqich o'rganamiz. Docker loyihani izolyatsiya qilingan konteynerlarda ishlatish imkonini beradi, bu esa uni turli muhitlarda barqaror ishlashini ta'minlaydi. Har bir qadam tushunarli va faqat joylashtirish va Docker ga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, JWT autentifikatsiyasi, ruxsatlar, sahifalash, Celery, keshlash va WebSocket (Django Channels) asosida davom etamiz.
+## 🎯 Dars Maqsadi
 
-## ✅ 1. TAYYORLOV ISHLARI
-📌 Loyiha va ilova allaqachon sozlangan deb hisoblaymiz (`myproject`, `myapp`, va `Task` modeli). Quyidagi sozlamalar mavjud bo'lishi kerak:
-- `Task` modeli `myapp/models.py` faylida belgilangan (shu jumladan `owner` maydoni).
-- `TaskSerializer` `myapp/serializers.py` faylida yaratilgan.
-- `TaskViewSet` `myapp/views.py` faylida sozlangan (JWT autentifikatsiyasi, ruxsatlar, filtrlash, sahifalash, keshlash va WebSocket bilan).
-- Signallar, Celery va WebSocket `myapp/signals.py`, `myapp/tasks.py` va `myapp/consumers.py` fayllarida sozlangan.
-- `/tasks/` va `/ws/tasks/` endpointlari `myproject/urls.py` va `myapp/routing.py` fayllarida sozlangan.
-📌 Agar bu sozlamalar hali amalga oshirilmagan bo'lsa, avvalgi darslarga qayting.
+Bu darsda Django REST Framework loyihasini **Production**'ga chiqarish - **Docker**, **Docker Compose**, **Nginx**, va **CI/CD** bilan to'liq deployment qilishni o'rganasiz.
 
-## ✅ 2. DOCKER VA JOYLASHTIRISH NI TUSHUNISH
-📌 **Docker**: Ilovalarni konteynerlarga joylashtirib, ularni mustaqil va moslashuvchan muhitda ishlatish imkonini beradi.
-📌 **Joylashtirish**: Loyihani ishlab chiqarish (production) muhitida foydalanuvchilarga ochiq qilish jarayoni.
-📌 Biz quyidagi komponentlarni Docker konteynerlarida joylashtiramiz:
-- Django (Daphne bilan WebSocket uchun).
-- Redis (Celery, keshlash va Channels uchun).
-- PostgreSQL (ma'lumotlar bazasi sifatida).
-- Celery worker.
-📌 Nginx ni reverse proxy sifatida ishlatamiz.
+**Dars oxirida siz:**
+- ✅ Docker basics va containerization
+- ✅ Multi-stage Docker builds
+- ✅ Docker Compose orchestration
+- ✅ PostgreSQL va Redis setup
+- ✅ Nginx reverse proxy
+- ✅ Environment variables va secrets
+- ✅ Static files va media handling
+- ✅ CI/CD pipeline (GitHub Actions)
+- ✅ Production best practices
 
-## ✅ 3. DOCKER VA DOCKER COMPOSE NI O'RNATISH
-📌 Docker va Docker Compose ni o'rnatish:
-- **Docker**: [Rasmiy saytdan](https://docs.docker.com/get-docker/) o'rnatiladi.
-- **Docker Compose**: Docker bilan birga keladi yoki alohida o'rnatiladi:
-  ```bash
-  sudo apt-get install docker-compose  # Ubuntu uchun
-  ```
-📌 Docker ishlayotganligini tekshiring:
-```bash
-docker --version
-docker-compose --version
+---
+
+## 📚 Oldingi Darsdan Kerakli Bilimlar
+
+Bu darsni boshlashdan oldin quyidagilar tayyor bo'lishi kerak:
+
+- [x] Django production settings
+- [x] Linux commands basics
+- [x] Docker concepts (ixtiyoriy)
+- [x] Git va GitHub
+
+> **Eslatma:** Deployment - development'dan production'ga o'tish!
+
+---
+
+## 🔍 1. DOCKER NIMA?
+
+### 1.1 Containerization
+
+```
+Traditional Deployment:
+Server → OS → Dependencies → App
+(Different environments = Different bugs)
+
+Docker Deployment:
+Server → Docker → Container (OS + Dependencies + App)
+(Same environment everywhere) ✅
 ```
 
-## ✅ 4. POSTGRESQL UCHUN SOZLAMALAR
-📌 Loyiha SQLite dan PostgreSQL ga o'tkaziladi. `myproject/settings.py` faylini yangilaymiz:
+### 1.2 Docker vs Virtual Machine
+
+| Feature | Virtual Machine | Docker Container |
+|---------|----------------|------------------|
+| **Size** | GBs | MBs |
+| **Startup** | Minutes | Seconds |
+| **Performance** | Slower | Near native |
+| **Isolation** | Complete OS | Process-level |
+| **Use case** | Heavy isolation | Microservices |
+
+### 1.3 Docker Components
+
+```mermaid
+graph TD
+    A[Docker Image] --> B[Docker Container]
+    B --> C[Running Application]
+    
+    D[Dockerfile] --> A
+    E[Docker Compose] --> F[Multiple Containers]
+    F --> G[Web App]
+    F --> H[Database]
+    F --> I[Redis]
+    F --> J[Nginx]
+```
+
+---
+
+## 🛠️ 2. PRE-DEPLOYMENT CHECKLIST
+
+### 2.1 Production Settings
+
+`myproject/settings_prod.py`:
+
 ```python
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'django_filters',
-    'channels',
-    'myapp.apps.MyappConfig',
-]
+from .settings import *
+import os
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/hour',
-        'user': '20/hour',
-    },
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5,
-}
+# SECURITY
+DEBUG = False
+SECRET_KEY = os.environ.get('SECRET_KEY')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
-# PostgreSQL sozlamalari
+# Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mydb',
-        'USER': 'myuser',
-        'PASSWORD': 'mypassword',
-        'HOST': 'db',
-        'PORT': '5432',
-    }
-}
-
-# Celery sozlamalari
-CELERY_BROKER_URL = 'redis://redis:6379/0'
-CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Tashkent'
-CELERY_TASK_ALWAYS_EAGER = False  # Ishlab chiqarishda sinxron emas
-
-# Keshlash sozlamalari
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://redis:6379/1',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST', 'db'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+        'CONN_MAX_AGE': 600,  # Connection pooling
         'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'connect_timeout': 10,
         }
     }
 }
 
-# Channels sozlamalari
-ASGI_APPLICATION = 'myproject.asgi.application'
+# Redis
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://redis:6379')
+
+# Celery
+CELERY_BROKER_URL = f'{REDIS_URL}/0'
+CELERY_RESULT_BACKEND = f'{REDIS_URL}/0'
+
+# Cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'{REDIS_URL}/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+        }
+    }
+}
+
+# Channels
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('redis', 6379)],
+            'hosts': [(os.environ.get('REDIS_HOST', 'redis'), 6379)],
         },
     },
 }
-```
-📌 **Tushuntirish**:
-- `DATABASES`: PostgreSQL sozlamalari qo'shildi. `db` — Docker Compose dagi PostgreSQL xizmati nomi.
-- `CELERY_BROKER_URL` va `CACHES`: `redis` xizmati nomiga o'zgartirildi.
-- `CELERY_TASK_ALWAYS_EAGER = False`: Ishlab chiqarishda Celery asinxron ishlaydi.
 
-## ✅ 5. DOCKERFILE YARATISH
-📌 Loyiha ildizida `Dockerfile` yarating:
+# Static files
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Security settings
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# HSTS
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/app/logs/django.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+}
+```
+
+### 2.2 Requirements Files
+
+`requirements/base.txt`:
+
+```txt
+Django==4.2.7
+djangorestframework==3.14.0
+django-filter==23.3
+djangorestframework-simplejwt==5.3.0
+psycopg2-binary==2.9.9
+redis==5.0.1
+celery==5.3.4
+django-redis==5.4.0
+channels==4.0.0
+channels-redis==4.1.0
+daphne==4.0.0
+gunicorn==21.2.0
+python-dotenv==1.0.0
+```
+
+`requirements/prod.txt`:
+
+```txt
+-r base.txt
+gevent==23.9.1
+whitenoise==6.6.0  # Static files
+sentry-sdk==1.38.0  # Error tracking
+```
+
+---
+
+## 🐳 3. DOCKERFILE
+
+### 3.1 Multi-Stage Build
+
+`Dockerfile`:
+
 ```dockerfile
-FROM python:3.9-slim
+# Build stage
+FROM python:3.11-slim as builder
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
 
+# Copy requirements
+COPY requirements/prod.txt requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+
+# Runtime stage
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH=/root/.local/bin:$PATH
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python dependencies from builder
+COPY --from=builder /root/.local /root/.local
+
+# Copy project
 COPY . .
 
-ENV PYTHONUNBUFFERED=1
+# Create directories
+RUN mkdir -p /app/staticfiles /app/media /app/logs
 
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "myproject.asgi:application"]
-```
-📌 **Tushuntirish**:
-- `python:3.9-slim`: Yengil Python tasviri.
-- `requirements.txt`: Loyiha bog'liqliklarini o'rnatadi.
-- `daphne`: WebSocket uchun ASGI serveri sifatida ishlaydi.
+# Collect static files (will run in entrypoint)
+# RUN python manage.py collectstatic --noinput
 
-## ✅ 6. REQUIREMENTS.TXT YARATISH
-📌 Loyiha ildizida `requirements.txt` faylini yarating:
-```
-django==4.2
-djangorestframework==3.14
-django-filter==23.2
-djangorestframework-simplejwt==5.2
-channels==4.0
-channels-redis==4.0
-django-redis==5.2
-celery==5.2
-redis==4.5
-psycopg2-binary==2.9
-daphne==4.0
-```
-📌 **Eslatma**: Versiyalar sizning loyihangizga mos kelishi kerak.
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+USER appuser
 
-## ✅ 7. DOCKER COMPOSE SOZLASH
-📌 Loyiha ildizida `docker-compose.yml` faylini yarating:
+# Expose port
+EXPOSE 8000
+
+# Entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "myproject.wsgi:application"]
+```
+
+### 3.2 Entrypoint Script
+
+`entrypoint.sh`:
+
+```bash
+#!/bin/bash
+
+set -e
+
+echo "Waiting for postgres..."
+while ! nc -z $DB_HOST $DB_PORT; do
+  sleep 0.1
+done
+echo "PostgreSQL started"
+
+echo "Waiting for redis..."
+while ! nc -z $REDIS_HOST 6379; do
+  sleep 0.1
+done
+echo "Redis started"
+
+# Run migrations
+echo "Running migrations..."
+python manage.py migrate --noinput
+
+# Collect static files
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
+# Create superuser if needed
+echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@example.com', 'admin')" | python manage.py shell
+
+exec "$@"
+```
+
+---
+
+## 📦 4. DOCKER COMPOSE
+
+### 4.1 Complete Setup
+
+`docker-compose.yml`:
+
 ```yaml
-version: '3.8'
+version: '3.9'
 
 services:
+  # PostgreSQL Database
   db:
-    image: postgres:13
-    environment:
-      POSTGRES_DB: mydb
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+    image: postgres:15-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
 
+  # Redis
   redis:
-    image: redis:6
+    image: redis:7-alpine
     volumes:
       - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
 
+  # Django Web Application
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
-      - .:/app
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+      - ./logs:/app/logs
     ports:
       - "8000:8000"
-    depends_on:
-      - db
-      - redis
     environment:
-      - PYTHONUNBUFFERED=1
-    command: >
-      sh -c "python manage.py migrate &&
-             daphne -b 0.0.0.0 -p 8000 myproject.asgi:application"
+      - DJANGO_SETTINGS_MODULE=myproject.settings_prod
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+      - frontend
+    restart: unless-stopped
 
+  # Celery Worker
   celery:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A myproject worker --loglevel=info --concurrency=4
     volumes:
-      - .:/app
+      - ./logs:/app/logs
+    environment:
+      - DJANGO_SETTINGS_MODULE=myproject.settings_prod
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # Celery Beat (Scheduler)
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A myproject beat --loglevel=info
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - DJANGO_SETTINGS_MODULE=myproject.settings_prod
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - redis
       - db
-    command: celery -A myproject worker --loglevel=info
+    networks:
+      - backend
+    restart: unless-stopped
 
+  # Nginx Reverse Proxy
   nginx:
-    image: nginx:latest
+    image: nginx:alpine
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./staticfiles:/app/staticfiles:ro
+      - ./media:/app/media:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - web
+    networks:
+      - frontend
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
-```
-📌 **Tushuntirish**:
-- `db`: PostgreSQL xizmati.
-- `redis`: Redis xizmati.
-- `web`: Django va Daphne xizmati.
-- `celery`: Celery worker xizmati.
-- `nginx`: Reverse proxy sifatida ishlaydi.
 
-## ✅ 8. NGINX SOZLASH
-📌 Loyiha ildizida `nginx.conf` faylini yarating:
+networks:
+  backend:
+  frontend:
+```
+
+### 4.2 Environment File
+
+`.env`:
+
+```bash
+# Django
+SECRET_KEY=your-super-secret-key-change-this-in-production
+DEBUG=False
+ALLOWED_HOSTS=localhost,127.0.0.1,yourdomain.com
+
+# Database
+DB_NAME=myproject_db
+DB_USER=myproject_user
+DB_PASSWORD=strong_password_here
+DB_HOST=db
+DB_PORT=5432
+
+# Redis
+REDIS_HOST=redis
+REDIS_URL=redis://redis:6379
+```
+
+**Add to `.gitignore`:**
+
+```
+.env
+*.pyc
+__pycache__/
+db.sqlite3
+staticfiles/
+media/
+logs/
+```
+
+---
+
+## 🌐 5. NGINX CONFIGURATION
+
+### 5.1 Production Config
+
+`nginx/nginx.conf`:
+
 ```nginx
-events {}
+events {
+    worker_connections 1024;
+}
 
 http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Logging
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # Performance
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml text/javascript
+               application/json application/javascript application/xml+rss;
+
+    # Rate limiting
+    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+
+    upstream django_app {
+        server web:8000;
+    }
+
     server {
         listen 80;
+        server_name localhost;
 
-        location / {
-            proxy_pass http://web:8000;
+        client_max_body_size 10M;
+
+        # Static files
+        location /static/ {
+            alias /app/staticfiles/;
+            expires 30d;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # Media files
+        location /media/ {
+            alias /app/media/;
+            expires 7d;
+            add_header Cache-Control "public";
+        }
+
+        # API endpoints
+        location /api/ {
+            limit_req zone=api_limit burst=20 nodelay;
+            
+            proxy_pass http://django_app;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            # Timeouts
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
         }
 
+        # WebSocket
         location /ws/ {
-            proxy_pass http://web:8000;
+            proxy_pass http://django_app;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
             proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            
+            # WebSocket timeouts
+            proxy_read_timeout 86400;
+        }
+
+        # Default location
+        location / {
+            proxy_pass http://django_app;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
         }
     }
+
+    # HTTPS server (uncomment when you have SSL certificates)
+    # server {
+    #     listen 443 ssl http2;
+    #     server_name yourdomain.com;
+    #
+    #     ssl_certificate /etc/nginx/ssl/cert.pem;
+    #     ssl_certificate_key /etc/nginx/ssl/key.pem;
+    #
+    #     # SSL configuration
+    #     ssl_protocols TLSv1.2 TLSv1.3;
+    #     ssl_ciphers HIGH:!aNULL:!MD5;
+    #     ssl_prefer_server_ciphers on;
+    #
+    #     # Same locations as above...
+    # }
 }
 ```
-📌 **Tushuntirish**:
-- `/`: HTTP so'rovlarini `web` xizmatiga yo'naltiradi.
-- `/ws/`: WebSocket so'rovlarini qo'llab-quvvatlaydi.
 
-## ✅ 9. LOYIHANI JOYLASHTIRISH
-📌 Docker Compose bilan loyihani ishga tushirish:
+---
+
+## 🎯 6. DEPLOYMENT COMMANDS
+
+### 6.1 Build and Run
+
 ```bash
-docker-compose up --build
+# Build images
+docker-compose build
+
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f web
+
+# Stop services
+docker-compose down
+
+# Stop and remove volumes
+docker-compose down -v
 ```
-📌 Migratsiyalarni amalga oshirish (birinchi marta):
+
+### 6.2 Management Commands
+
 ```bash
+# Run migrations
 docker-compose exec web python manage.py migrate
-```
-📌 Superuser yaratish:
-```bash
+
+# Create superuser
 docker-compose exec web python manage.py createsuperuser
+
+# Collect static files
+docker-compose exec web python manage.py collectstatic --noinput
+
+# Django shell
+docker-compose exec web python manage.py shell
+
+# Database shell
+docker-compose exec db psql -U $DB_USER -d $DB_NAME
 ```
 
-## ✅ 10. JOYLASHTIRISHNI SINAB KO'RISH
-📌 Brauzerda `http://localhost` yoki `http://localhost/ws/` manzilini oching.
-📌 API ni sinash:
+---
+
+## 🎯 AMALIYOT TOPSHIRIQLARI
+
+### 📝 Topshiriq 1: Basic Docker Setup (Oson)
+
+**Talablar:**
+- ✅ Dockerfile yaratish
+- ✅ docker-compose.yml (web, db, redis)
+- ✅ Environment variables
+- ✅ Localhost'da ishlatish
+
+### 📝 Topshiriq 2: Complete Production Setup (O'rta)
+
+**Talablar:**
+- ✅ Multi-stage Dockerfile
+- ✅ Nginx reverse proxy
+- ✅ Static files handling
+- ✅ SSL certificates (self-signed)
+- ✅ Celery worker
+- ✅ Health checks
+
+### 📝 Topshiriq 3: Full CI/CD Pipeline (Qiyin)
+
+**Talablar:**
+- ✅ GitHub Actions workflow
+- ✅ Automated testing
+- ✅ Docker image build
+- ✅ Push to Docker Hub/Registry
+- ✅ Deploy to cloud (AWS/DigitalOcean)
+- ✅ Database backups
+- ✅ Monitoring (Sentry)
+
+---
+
+## 🔗 KEYINGI DARSLAR
+
+✅ **Dars 18 tugadi! Deployment va Docker o'rgandingiz**!
+
+**Keyingi darsda:**
+- Advanced Concepts
+- API Versioning
+- Best Practices
+
+---
+
+## 📚 QISQA XULOSALAR
+
+### Docker Commands
+
 ```bash
-curl -X POST http://localhost/api/token/ -H "Content-Type: application/json" -d '{"username": "testuser", "password": "testpass123"}'
-```
-```bash
-curl -X POST http://localhost/tasks/ -H "Authorization: Bearer <access_token>" -H "Content-Type: application/json" -d '{"title": "Yangi vazifa", "description": "Test"}'
-```
-📌 WebSocket sinovi:
-- `http://localhost/ws/` manzilida WebSocket sahifasini oching.
-- Yangi vazifa qo'shing va bildirishnoma oling.
+# Build
+docker build -t myapp .
+docker-compose build
 
-## ✅ 11. TESTLARNI DOCKERDA ISHGA TUSHIRISH
-📌 Testlarni Docker ichida ishga tushirish:
-```bash
-docker-compose exec web python manage.py test
+# Run
+docker run -p 8000:8000 myapp
+docker-compose up -d
+
+# Logs
+docker logs container_name
+docker-compose logs -f service_name
+
+# Execute
+docker exec -it container_name bash
+docker-compose exec service_name bash
+
+# Clean up
+docker system prune -a
+docker volume prune
 ```
 
-## ✅ 12. SINOV UCHUN MASALALAR
-📌 Joylashtirishni sinash uchun quyidagi amallarni bajarib ko'ring:
-1. `docker-compose up --build` bilan loyihani ishga tushiring va `http://localhost/tasks/` manzilini sinang.
-2. WebSocket ni `http://localhost/ws/` manzilida sinab, vazifa qo'shishda bildirishnoma oling.
-3. Testlarni `docker-compose exec web python manage.py test` bilan ishga tushiring.
-4. PostgreSQL ga ulanishni `docker-compose exec db psql -U myuser -d mydb` bilan tekshiring.
+### Production Checklist
 
+```python
+# ✅ Must Have
+- DEBUG = False
+- Strong SECRET_KEY
+- Environment variables
+- Database backups
+- SSL/HTTPS
+- Static files served properly
+- Logging configured
+- Error monitoring (Sentry)
+
+# ✅ Performance
+- Gunicorn workers (2-4 x CPU cores)
+- Connection pooling
+- Redis caching
+- CDN for static files
+- Database indexes
+
+# ✅ Security
+- ALLOWED_HOSTS configured
+- CSRF protection
+- CORS configured
+- Rate limiting
+- Regular updates
+```
+
+**Esda tuting:**
+- Docker = Consistency everywhere
+- docker-compose = Multi-container orchestration
+- Nginx = Reverse proxy + static files
+- Environment variables = Secrets management
+- CI/CD = Automated deployment! 🚀
