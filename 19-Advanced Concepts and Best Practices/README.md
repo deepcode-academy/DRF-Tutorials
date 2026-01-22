@@ -1,361 +1,799 @@
-# 🧩 19-DARS: ILG'OR TUSHUNCHALAR VA ENG YAXSHI AMALIYOTLAR
+# 🎓 19-DARS: ADVANCED CONCEPTS VA BEST PRACTICES
 
-Bu darsda Django REST Framework (DRF) da ilg'or tushunchalar va eng yaxshi amaliyotlarni bosqichma-bosqich o'rganamiz. Biz API versioning, DRF-spectacular bilan avtomatik API hujjatlari, maxsus xatolik boshqaruvi va loyiha sifatini oshirish uchun eng yaxshi amaliyotlarni ko'rib chiqamiz. Har bir qadam tushunarli va faqat ilg'or tushunchalar va amaliyotlarga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, JWT autentifikatsiyasi, ruxsatlar, sahifalash, Celery, keshlash, WebSocket va Docker asosida davom etamiz.
+## 🎯 Dars Maqsadi
 
-## ✅ 1. TAYYORLOV ISHLARI
-📌 Loyiha va ilova allaqachon sozlangan deb hisoblaymiz (`myproject`, `myapp`, va `Task` modeli). Quyidagi sozlamalar mavjud bo'lishi kerak:
-- `Task` modeli `myapp/models.py` faylida belgilangan (shu jumladan `owner` maydoni).
-- `TaskSerializer` `myapp/serializers.py` faylida yaratilgan.
-- `TaskViewSet` `myapp/views.py` faylida sozlangan (JWT autentifikatsiyasi, ruxsatlar, filtrlash, sahifalash, keshlash va WebSocket bilan).
-- Signallar, Celery, WebSocket va testlar `myapp/signals.py`, `myapp/tasks.py`, `myapp/consumers.py` va `myapp/tests.py` fayllarida sozlangan.
-- Docker sozlamalari `Dockerfile` va `docker-compose.yml` fayllarida mavjud.
-📌 Agar bu sozlamalar hali amalga oshirilmagan bo'lsa, avvalgi darslarga qayting.
+Bu darsda Django REST Framework'da **Advanced Concepts** va **Best Practices** - professional API development uchun zarur bo'lgan ilg'or tushunchalar va eng yaxshi amaliyotlarni o'rganasiz.
 
-## ✅ 2. ILG'OR TUSHUNCHALAR VA ENG YAXSHI AMALIYOTLAR NI TUSHUNISH
-📌 **Ilg'or tushunchalar**:
-- **API versioning**: API ning turli versiyalarini qo'llab-quvvatlash.
-- **DRF-spectacular**: Avtomatik API hujjatlari (OpenAPI/Swagger) yaratish.
-- **Maxsus xatolik boshqaruvi**: API xatolarini markazlashgan tarzda boshqarish.
-📌 **Eng yaxshi amaliyotlar**:
-- Kod tashkiloti: Loyiha tuzilmasini soddalashtirish va qayta ishlatish.
-- Xavfsizlik: API va ma'lumotlarni himoya qilish.
-- Logging: Tahlil va xatolarni kuzatish uchun yaxshilangan logging.
-- Test qamrovi: To'liq funksionallikni sinash.
-📌 Ushbu darsda ushbu tushunchalarni loyihamizga qo'llaymiz.
+**Dars oxirida siz:**
+- ✅ API Versioning strategies
+- ✅ Auto-generated documentation (Swagger/OpenAPI)
+- ✅ CORS configuration
+- ✅ Custom exception handling
+- ✅ API rate limiting strategies
+- ✅ Security best practices
+- ✅ Code organization patterns
+- ✅ Monitoring va logging
+- ✅ Production checklist
 
-## ✅ 3. PAKETLARNI O'RNATISH
-📌 API versioning va DRF-spectacular uchun qo'shimcha paketlarni o'rnatamiz:
+---
+
+## 📚 Oldingi Darsdan Kerakli Bilimlar
+
+Bu darsni boshlashdan oldin quyidagilar tayyor bo'lishi kerak:
+
+- [x] Barcha oldingi darslar
+- [x] Production deployment experience
+- [x] REST API principles
+
+> **Eslatma:** Bu dars - kursmizning yakunlovchi qismi!
+
+---
+
+## 🔍 1. API VERSIONING
+
+### 1.1 Nega Versioning Kerak?
+
+```
+Without Versioning:
+API changes → Breaking changes → Angry users 😡
+
+With Versioning:
+API v1 (old clients) → Still works ✅
+API v2 (new clients) → New features ✅
+```
+
+### 1.2 Versioning Strategies
+
+| Strategy | Example | Pros | Cons |
+|----------|---------|------|------|
+| **URL Path** | `/api/v1/tasks/` | Clear, Cacheable | URL clutter |
+| **Query Parameter** | `/api/tasks/?version=1` | Flexible | Not standard |
+| **Header** | `Accept: application/vnd.api+json; version=1` | Clean URLs | Hidden |
+| **Hostname** | `v1.api.example.com` | Isolation | Infrastructure |
+
+### 1.3 Implementation (URL Path)
+
+`myproject/settings.py`:
+
+```python
+REST_FRAMEWORK = {
+    # ... other settings ...
+    
+    # Versioning
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    'DEFAULT_VERSION': 'v1',
+    'ALLOWED_VERSIONS': ['v1', 'v2'],
+    'VERSION_PARAM': 'version',
+}
+```
+
+`myproject/urls.py`:
+
+```python
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from tasks.views import TaskViewSetV1, TaskViewSetV2
+
+# V1 Router
+router_v1 = DefaultRouter()
+router_v1.register(r'tasks', TaskViewSetV1, basename='task')
+
+# V2 Router
+router_v2 = DefaultRouter()
+router_v2.register(r'tasks', TaskViewSetV2, basename='task')
+
+urlpatterns = [
+    # API v1
+    path('api/v1/', include(router_v1.urls)),
+    
+    # API v2
+    path('api/v2/', include(router_v2.urls)),
+]
+```
+
+`tasks/views.py`:
+
+```python
+from rest_framework import viewsets
+from .models import Task
+from .serializers import TaskSerializerV1, TaskSerializerV2
+
+class TaskViewSetV1(viewsets.ModelViewSet):
+    """
+    API Version 1 - Deprecated
+    """
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializerV1
+    
+    def list(self, request, *args, **kwargs):
+        # Add deprecation warning
+        response = super().list(request, *args, **kwargs)
+        response['Warning'] = '299 - "API v1 is deprecated. Please migrate to v2"'
+        return response
+
+
+class TaskViewSetV2(viewsets.ModelViewSet):
+    """
+    API Version 2 - Current
+    
+    New features:
+    - Additional fields
+    - Better performance
+    - Improved filtering
+    """
+    queryset = Task.objects.select_related('owner').prefetch_related('tags')
+    serializer_class = TaskSerializerV2
+    
+    # V2 specific features
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # V2 specific optimizations
+        return queryset
+```
+
+---
+
+## 📖 2. AUTO-GENERATED DOCUMENTATION
+
+### 2.1 drf-spectacular Setup
+
 ```bash
 pip install drf-spectacular
 ```
-📌 `requirements.txt` faylini yangilang:
-```
-django==4.2
-djangorestframework==3.14
-django-filter==23.2
-djangorestframework-simplejwt==5.2
-channels==4.0
-channels-redis==4.0
-django-redis==5.2
-celery==5.2
-redis==4.5
-psycopg2-binary==2.9
-daphne==4.0
-drf-spectacular==0.26
-```
 
-## ✅ 4. LOYIHA SOZLAMALARINI YANGILASH
-📌 `myproject/settings.py` faylida API versioning va DRF-spectacular sozlamalarini qo'shamiz:
+`myproject/settings.py`:
+
 ```python
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'django_filters',
-    'channels',
+    # ...
     'drf_spectacular',
-    'myapp.apps.MyappConfig',
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
+    # ...
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Spectacular settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Task Management API',
+    'DESCRIPTION': 'Comprehensive task management system with real-time updates',
+    'VERSION': '2.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    
+    # API info
+    'CONTACT': {
+        'name': 'Deepcode Academy',
+        'email': 'info@deepcode.academy',
+        'url': 'https://deepcode.academy',
+    },
+    'LICENSE': {
+        'name': 'MIT License',
+    },
+    
+    # Swagger UI settings
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': True,
+    },
+    
+    # Component split
+    'COMPONENT_SPLIT_REQUEST': True,
+    
+    # Schema extensions
+    'EXTENSIONS_INFO': {},
+}
+```
+
+### 2.2 URLs
+
+`myproject/urls.py`:
+
+```python
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
+)
+
+urlpatterns = [
+    # OpenAPI schema
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    
+    # Swagger UI
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    
+    # ReDoc
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+]
+```
+
+### 2.3 Schema Annotations
+
+`tasks/views.py`:
+
+```python
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+    OpenApiParameter,
+    OpenApiExample,
+    OpenApiResponse,
+)
+from drf_spectacular.types import OpenApiTypes
+
+@extend_schema_view(
+    list=extend_schema(
+        summary='List all tasks',
+        description='Get paginated list of tasks with filtering and search',
+        parameters=[
+            OpenApiParameter(
+                name='status',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Filter by status (todo, in_progress, done)',
+                enum=['todo', 'in_progress', 'done'],
+            ),
+            OpenApiParameter(
+                name='priority',
+                type=OpenApiTypes.STR,
+                description='Filter by priority',
+                enum=['low', 'medium', 'high'],
+            ),
+            OpenApiParameter(
+                name='search',
+                type=OpenApiTypes.STR,
+                description='Search in title and description',
+            ),
+        ],
+        examples=[
+            OpenApiExample(
+                'List all tasks',
+                value={'results': [{'id': 1, 'title': 'Task 1'}]},
+                response_only=True,
+            ),
+        ],
+    ),
+    create=extend_schema(
+        summary='Create a task',
+        description='Create a new task for authenticated user',
+        request=TaskSerializer,
+        responses={
+            201: TaskSerializer,
+            400: OpenApiResponse(description='Bad request'),
+        },
+        examples=[
+            OpenApiExample(
+                'Create task example',
+                value={
+                    'title': 'Complete DRF course',
+                    'description': 'Finish all 19 lessons',
+                    'priority': 'high',
+                    'due_date': '2024-12-31'
+                },
+                request_only=True,
+            ),
+        ],
+    ),
+)
+class TaskViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing tasks
+    
+    Provides CRUD operations for tasks with:
+    - Filtering by status, priority
+    - Search by title, description
+    - Pagination
+    - Permission: IsAuthenticated
+    """
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+```
+
+### 2.4 Serializer Documentation
+
+`tasks/serializers.py`:
+
+```python
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
+
+class TaskSerializer(serializers.ModelSerializer):
+    """
+    Task serializer with all fields
+    """
+    
+    owner = serializers.ReadOnlyField(source='owner.username')
+    
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_status_display(self, obj):
+        """Human-readable status"""
+        return obj.get_status_display()
+    
+    class Meta:
+        model = Task
+        fields = [
+            'id', 'title', 'description', 'status', 
+            'priority', 'due_date', 'owner', 'created_at'
+        ]
+        read_only_fields = ['id', 'owner', 'created_at']
+```
+
+---
+
+## 🔒 3. CORS CONFIGURATION
+
+### 3.1 Setup
+
+```bash
+pip install django-cors-headers
+```
+
+`myproject/settings.py`:
+
+```python
+INSTALLED_APPS = [
+    # ...
+    'corsheaders',
+]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Before CommonMiddleware
+    'django.middleware.common.CommonMiddleware',
+    # ...
+]
+
+# CORS settings
+# Development (allow all)
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    # Production (specific origins)
+    CORS_ALLOWED_ORIGINS = [
+        'https://example.com',
+        'https://app.example.com',
+    ]
+
+# Allow credentials (cookies)
+CORS_ALLOW_CREDENTIALS = True
+
+# Allowed methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Allowed headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Preflight cache (seconds)
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
+```
+
+---
+
+## ⚠️ 4. CUSTOM EXCEPTION HANDLING
+
+### 4.1 Global Exception Handler
+
+`tasks/exceptions.py`:
+
+```python
+from rest_framework.views import exception_handler
+from rest_framework.response import Response
+from rest_framework import status
+import logging
+
+logger = logging.getLogger(__name__)
+
+def custom_exception_handler(exc, context):
+    """
+    Custom exception handler for consistent error responses
+    
+    Standard format:
+    {
+        "error": {
+            "code": "error_code",
+            "message": "Human-readable message",
+            "details": {...},
+            "timestamp": "2024-01-22T10:00:00Z"
+        }
+    }
+    """
+    # Call DRF's default handler first
+    response = exception_handler(exc, context)
+    
+    if response is not None:
+        # Log error
+        logger.error(
+            f'API Error: {exc.__class__.__name__} - {str(exc)}',
+            exc_info=True,
+            extra={'context': context}
+        )
+        
+        # Customize response
+        from django.utils import timezone
+        
+        custom_response = {
+            'error': {
+                'code': exc.__class__.__name__,
+                'message': str(exc),
+                'details': response.data,
+                'timestamp': timezone.now().isoformat(),
+                'path': context['request'].path,
+            }
+        }
+        
+        response.data = custom_response
+    else:
+        # Unhandled exception
+        logger.critical(
+            f'Unhandled Exception: {exc.__class__.__name__}',
+            exc_info=True,
+            extra={'context': context}
+        )
+    
+    return response
+```
+
+### 4.2 Custom Exception Classes
+
+```python
+from rest_framework.exceptions import APIException
+
+class TaskNotFoundError(APIException):
+    """Custom exception for task not found"""
+    status_code = 404
+    default_detail = 'Task not found'
+    default_code = 'task_not_found'
+
+
+class TaskAlreadyCompletedError(APIException):
+    """Custom exception for already completed task"""
+    status_code = 400
+    default_detail = 'Task is already completed'
+    default_code = 'task_already_completed'
+
+
+class InsufficientPermissionsError(APIException):
+    """Custom exception for permission denied"""
+    status_code = 403
+    default_detail = 'You do not have permission to perform this action'
+    default_code = 'insufficient_permissions'
+
+
+# Usage in views
+class TaskViewSet(viewsets.ModelViewSet):
+    def complete(self, request, pk=None):
+        task = self.get_object()
+        
+        if task.completed:
+            raise TaskAlreadyCompletedError()
+        
+        task.completed = True
+        task.save()
+        
+        return Response({'status': 'success'})
+```
+
+---
+
+## 🛡️ 5. SECURITY BEST PRACTICES
+
+### 5.1 Production Security Checklist
+
+`myproject/settings_prod.py`:
+
+```python
+# SECURITY SETTINGS
+
+# HTTPS/SSL
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# HSTS (HTTP Strict Transport Security)
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Content Security
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+
+# CSRF
+CSRF_COOKIE_HTTPONLY = True
+CSRF_USE_SESSIONS = True
+
+# Session
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Strict'
+
+# Allowed hosts
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+
+# Secret key from environment
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError('SECRET_KEY environment variable is not set')
+
+# Debug off in production
+DEBUG = False
+
+# Admin URL obfuscation
+ADMIN_URL = os.environ.get('ADMIN_URL', 'admin/')
+```
+
+### 5.2 Rate Limiting Strategies
+
+```python
+# settings.py
+REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/hour',
-        'user': '20/hour',
-    },
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5,
-    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',  # API versioning
-    'DEFAULT_VERSION': 'v1',  # Standart versiya
-    'ALLOWED_VERSIONS': ['v1', 'v2'],  # Ruxsat etilgan versiyalar
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # DRF-spectacular
-}
-
-# PostgreSQL sozlamalari
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mydb',
-        'USER': 'myuser',
-        'PASSWORD': 'mypassword',
-        'HOST': 'db',
-        'PORT': '5432',
+        'anon': '100/hour',
+        'user': '1000/hour',
+        'auth': '10/minute',  # Login attempts
+        'api': '5000/hour',   # General API
     }
 }
+```
 
-# Celery sozlamalari
-CELERY_BROKER_URL = 'redis://redis:6379/0'
-CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Tashkent'
-CELERY_TASK_ALWAYS_EAGER = False
+---
 
-# Keshlash sozlamalari
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://redis:6379/1',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    }
-}
+## 📊 6. MONITORING & LOGGING
 
-# Channels sozlamalari
-ASGI_APPLICATION = 'myproject.asgi.application'
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('redis', 6379)],
-        },
-    },
-}
+### 6.1 Comprehensive Logging
 
-# Logging sozlamalari
+`myproject/settings.py`:
+
+```python
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '[{levelname}] {asctime} {name} {module} {process:d} {thread:d} {message}',
             'style': '{',
+        },
+        'simple': {
+            'format': '[{levelname}] {message}',
+            'style': '{',
+        },
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(name)s %(levelname)s %(message)s',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
         },
     },
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log',
-            'formatter': 'verbose',
-        },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/app/logs/django.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/app/logs/django_errors.log',
+            'maxBytes': 1024 * 1024 * 10,
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'filters': ['require_debug_false'],
+        },
     },
     'loggers': {
-        'myapp': {
-            'handlers': ['file', 'console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
         'django': {
-            'handlers': ['file', 'console'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'INFO',
-            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['error_file', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'tasks': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
         },
     },
 }
 ```
-📌 **Tushuntirish**:
-- `DEFAULT_VERSIONING_CLASS`: URL da versiyalashni yoqadi (masalan, `/v1/tasks/`).
-- `DEFAULT_SCHEMA_CLASS`: DRF-spectacular ni API hujjatlari uchun sozlaydi.
-- `LOGGING`: Formatlangan loglar uchun `verbose` formater qo'shildi.
 
-## ✅ 5. API VERSIONING NI SOZLASH
-📌 `myproject/urls.py` faylini yangilaymiz va versiyalashni qo'llab-quvvatlaymiz:
-```python
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from myapp.views import TaskViewSet
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+### 6.2 Sentry Integration
 
-router = DefaultRouter()
-router.register(r'tasks', TaskViewSet)
-
-urlpatterns = [
-    path('', include('myapp.urls')),  # WebSocket sahifasi uchun
-    path('v1/', include(router.urls)),  # v1 versiyasi
-    path('v2/', include(router.urls)),  # v2 versiyasi (keyinchalik farqlarni qo'shish mumkin)
-    path('v1/api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('v1/api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('v1/schema/', SpectacularAPIView.as_view(), name='schema'),  # API sxemasi
-    path('v1/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),  # Swagger UI
-]
-```
-📌 **Tushuntirish**:
-- `v1/` va `v2/`: API versiyalari uchun prefikslar.
-- `SpectacularAPIView`: OpenAPI sxemasini yaratadi.
-- `SpectacularSwaggerView`: Swagger UI ni ta'minlaydi.
-
-## ✅ 6. MAXSUS XATOLIK BOSHQARUVI
-📌 `myapp/exceptions.py` faylini yarating va maxsus xatolik sinfini qo'shing:
-```python
-from rest_framework.views import exception_handler
-from rest_framework.response import Response
-from rest_framework import status
-
-def custom_exception_handler(exc, context):
-    response = exception_handler(exc, context)
-    
-    if response is not None:
-        custom_response = {
-            'error': {
-                'status_code': response.status_code,
-                'message': str(exc),
-                'detail': response.data
-            }
-        }
-        response.data = custom_response
-    
-    return response
-```
-📌 `myproject/settings.py` faylida xatolik boshqaruvchisini sozlang:
-```python
-REST_FRAMEWORK = {
-    ...
-    'EXCEPTION_HANDLER': 'myapp.exceptions.custom_exception_handler',
-}
-```
-📌 **Tushuntirish**:
-- `custom_exception_handler`: API xatolarini moslashtirilgan formatda qaytaradi (masalan, `{'error': {...}}`).
-
-## ✅ 7. KOD TASHKILOTI VA ENG YAXSHI AMALIYOTLAR
-📌 Quyidagi amaliyotlarni qo'llaymiz:
-- **Modulli tuzilma**: Kodni `models`, `serializers`, `views`, `permissions`, `pagination`, `signals`, `tasks`, `consumers` va `exceptions` kabi alohida fayllarga ajratdik.
-- **Xavfsizlik**:
-  - JWT autentifikatsiyasi va `IsOwnerOrReadOnly` ruxsatlarini qo'lladik.
-  - `ALLOWED_HOSTS` ni sozlash:
-    ```python
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'your-domain.com']
-    ```
-  - HTTPS ni Nginx orqali sozlash (ishlab chiqarishda).
-- **Logging**: Formatlangan loglar qo'shildi (`verbose` formater).
-- **Test qamrovi**: Oldingi darsda yozilgan testlar loyiha funksionalligini qamrab oladi.
-- **Ma'lumotlar bazasi optimallashtirish**: `select_related` qo'llanildi.
-
-## ✅ 8. DRF-SPECTACULAR BILAN API HUJJATLARI
-📌 `myapp/views.py` faylida `TaskViewSet` ni DRF-spectacular uchun hujjatlaymiz:
-```python
-from rest_framework import viewsets
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
-from django.views.decorators.cache import cache_page
-from django.utils.decorators import method_decorator
-from .models import Task
-from .serializers import TaskSerializer
-from .permissions import IsOwnerOrReadOnly
-from .pagination import CustomTaskPagination
-from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-
-class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all().select_related('owner')
-    serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['completed', 'owner']
-    search_fields = ['title', 'description']
-    ordering_fields = ['created_at', 'completed']
-    ordering = ['created_at']
-    pagination_class = CustomTaskPagination
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-    @method_decorator(cache_page(60 * 5))
-    @extend_schema(
-        description='Barcha vazifalarni ro\'yxatini qaytaradi, sahifalash va filtrlash qo\'llaniladi.',
-        parameters=[
-            OpenApiParameter(name='completed', description='Vazifa holati (true/false)', required=False, type=bool),
-            OpenApiParameter(name='search', description='Sarlavha yoki tavsif bo\'yicha qidirish', required=False, type=str),
-        ]
-    )
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-```
-📌 **Tushuntirish**:
-- `@extend_schema`: API endpointi uchun hujjatlashtirish qo'shadi.
-- `OpenApiParameter`: Filtr va qidiruv parametrlari uchun hujjatlashtirish.
-
-## ✅ 9. TESTLARNI YANGILASH
-📌 `myapp/tests.py` fayliga API versioning va xatolik boshqaruvini sinash uchun testlar qo'shamiz:
-```python
-from django.test import TestCase
-from rest_framework.test import APITestCase
-from rest_framework import status
-from django.urls import reverse
-from django.contrib.auth.models import User
-from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Task
-from .serializers import TaskSerializer
-from django.core.cache import cache
-from channels.testing import WebsocketCommunicator
-from myapp.consumers import TaskConsumer
-import json
-import logging
-
-logger = logging.getLogger(__name__)
-
-# Oldingi testlar (TaskModelTest, TaskSerializerTest, TaskSignalTest, TaskAPITest, TaskWebSocketTest) shu yerda qoladi
-
-class TaskAdvancedTest(APITestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass123')
-        self.token = RefreshToken.for_user(self.user).access_token
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
-        cache.clear()
-
-    def test_api_versioning(self):
-        url_v1 = reverse('task-list', kwargs={'version': 'v1'})
-        response_v1 = self.client.get(url_v1)
-        self.assertEqual(response_v1.status_code, status.HTTP_200_OK)
-
-        url_v2 = reverse('task-list', kwargs={'version': 'v2'})
-        response_v2 = self.client.get(url_v2)
-        self.assertEqual(response_v2.status_code, status.HTTP_200_OK)
-
-    def test_custom_exception_handler(self):
-        url = reverse('task-detail', kwargs={'version': 'v1', 'pk': 999})  # Mavjud bo'lmagan ID
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn('error', response.data)
-        self.assertEqual(response.data['error']['status_code'], 404)
-        self.assertIn('detail', response.data['error'])
-
-    def test_api_documentation(self):
-        url = reverse('schema', kwargs={'version': 'v1'})
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-```
-📌 **Tushuntirish**:
-- `test_api_versioning`: `v1` va `v2` versiyalarini sinaydi.
-- `test_custom_exception_handler`: Maxsus xatolik formatini tekshiradi.
-- `test_api_documentation`: API sxemasining mavjudligini sinaydi.
-
-## ✅ 10. DOCKER SOZLAMALARINI TEKSHIRISH
-📌 `docker-compose.yml` faylida o'zgarishlar talab qilinmaydi, lekin `requirements.txt` yangilanganligi uchun konteynerni qayta quring:
 ```bash
-docker-compose up --build
+pip install sentry-sdk
 ```
 
-## ✅ 11. SINOV UCHUN MASALALAR
-📌 Ilg'or tushunchalar va amaliyotlarni sinash uchun quyidagi amallarni bajarib ko'ring:
-1. `http://localhost/v1/docs/` manzilida Swagger UI ni oching va API hujjatlarini ko'ring.
-2. `http://localhost/v1/tasks/` va `http://localhost/v2/tasks/` manzillarini sinab, versiyalashni tekshiring.
-3. Mavjud bo'lmagan vazifani so'rang (`/v1/tasks/999/`) va maxsus xatolik formatini ko'ring.
-4. `python manage.py test` bilan yangi testlarni sinab ko'ring.
-5. Loglarni `debug.log` faylida tekshiring va formatlangan xabarlarni ko'ring.
+```python
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
 
+sentry_sdk.init(
+    dsn=os.environ.get('SENTRY_DSN'),
+    integrations=[
+        DjangoIntegration(),
+        CeleryIntegration(),
+    ],
+    traces_sample_rate=1.0 if DEBUG else 0.1,
+    send_default_pii=False,
+    environment=os.environ.get('ENVIRONMENT', 'production'),
+)
+```
+
+---
+
+## 🎯 AMALIYOT TOPSHIRIQLARI
+
+### 📝 Topshiriq 1: API Documentation (Oson)
+
+**Talablar:**
+- ✅ drf-spectacular setup
+- ✅ Schema annotations (@extend_schema)
+- ✅ Swagger UI
+- ✅ API versioning (v1, v2)
+
+### 📝 Topshiriq 2: Security Hardening (O'rta)
+
+**Talablar:**
+- ✅ CORS configuration
+- ✅ Custom exception handler
+- ✅ Rate limiting per endpoint
+- ✅ Security headers
+- ✅ Environment variables
+
+### 📝 Topshiriq 3: Production-Ready API (Qiyin)
+
+**Talablar:**
+- ✅ Complete documentation
+- ✅ Sentry integration
+- ✅ Comprehensive logging
+- ✅ Health check endpoint
+- ✅ API versioning with deprecation
+- ✅ 95%+ test coverage
+- ✅ Performance monitoring
+
+---
+
+## 🔗 KURSNI YAKUNLASH
+
+✅ **🎉 Tabriklaymiz! Siz Django REST Framework kursini tugatdingiz!**
+
+**Siz o'rgandingiz:**
+- ✅ RESTful API basics
+- ✅ Authentication & Permissions
+- ✅ Filtering, Pagination, Throttling
+- ✅ JWT, Signals, Celery
+- ✅ Testing, Caching, WebSockets
+- ✅ Docker deployment
+- ✅ Advanced concepts
+
+**Keyingi qadamlar:**
+1. O'z loyihangizni yarating
+2. Portfolio uchun API publish qiling
+3. Open source contribute qiling
+4. Advanced topics: GraphQL, gRPC
+
+---
+
+## 📚 QISQA XULOSALAR
+
+### API Best Practices
+
+```python
+# ✅ Must Have
+- API versioning
+- Auto-generated docs
+- Custom exception handling
+- CORS configuration
+- Rate limiting
+- Security headers
+- Comprehensive logging
+- Error monitoring (Sentry)
+- Health checks
+- Testing (95%+ coverage)
+
+# ✅ Performance
+- Database query optimization
+- Caching strategy
+- Async tasks (Celery)
+- Connection pooling
+- CDN for static files
+
+# ✅ Code Quality
+- Type hints
+- Docstrings
+- Clean code principles
+- DRY (Don't Repeat Yourself)
+- Separation of concerns
+```
+
+### Professional API Checklist
+
+```python
+# Documentation
+□ Swagger/OpenAPI docs
+□ README with examples
+□ Postman collection
+□ Changelog/Release notes
+
+# Security
+□ HTTPS only
+□ JWT authentication
+□ Permission system
+□ Rate limiting
+□ Input validation
+□ SQL injection protection
+□ XSS protection
+
+# Monitoring
+□ Error tracking (Sentry)
+□ Performance monitoring
+□ Log aggregation
+□ Uptime monitoring
+□ Alert system
+
+# Testing
+□ Unit tests
+□ Integration tests
+□ API tests
+□ Load tests
+□ Security tests
+```
+
+**Esda tuting:**
+- Documentation = Developer happiness
+- Security = Trust
+- Monitoring = Peace of mind
+- Testing = Confidence
+- Keep learning! 🚀
+
+---
+
+**© 2024 Deepcode Academy. Barcha huquqlar himoyalangan.**
+
+🌐 Website: [deepcode.academy](https://deepcode.academy)  
+📱 Telegram: [@deepcode_academy](https://t.me/deepcode_academy)
