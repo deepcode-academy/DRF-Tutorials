@@ -1,347 +1,804 @@
-# 🧩 16-DARS: KESHLASH VA ISHLASHNI OPTIMALASHTIRISH
+# ⚡ 16-DARS: CACHING VA PERFORMANCE OPTIMIZATION
 
-Bu darsda Django REST Framework (DRF) yordamida keshlash (caching) va ishlashni optimallashtirish usullarini bosqichma-bosqich o'rganamiz. Keshlash API javoblarini tezkorlashtiradi va server yukini kamaytiradi. Har bir qadam tushunarli va faqat keshlash va ishlash optimallashtirishga qaratilgan bo'ladi. Oldingi darslarda sozlangan `myproject` loyihasi va `myapp` ilovasidagi `Task` modeli, JWT autentifikatsiyasi, ruxsatlar, sahifalash, signallar va Celery asosida davom etamiz.
+## 🎯 Dars Maqsadi
 
-## ✅ 1. TAYYORLOV ISHLARI
-📌 Loyiha va ilova allaqachon sozlangan deb hisoblaymiz (`myproject`, `myapp`, va `Task` modeli). Quyidagi sozlamalar mavjud bo'lishi kerak:
-- `Task` modeli `myapp/models.py` faylida belgilangan (shu jumladan `owner` maydoni).
-- `TaskSerializer` `myapp/serializers.py` faylida yaratilgan.
-- `TaskViewSet` `myapp/views.py` faylida sozlangan (JWT autentifikatsiyasi, ruxsatlar, filtrlash, sahifalash va Celery bilan).
-- Signallar va Celery `myapp/signals.py` va `myapp/tasks.py` fayllarida sozlangan.
-- Testlar `myapp/tests.py` faylida yozilgan.
-- `/tasks/` endpointi `myproject/urls.py` faylida sozlangan.
-📌 Agar bu sozlamalar hali amalga oshirilmagan bo'lsa, avvalgi darslarga qayting.
+Bu darsda Django REST Framework'da **Caching (Keshlash)** va **Performance Optimization** - API'ni tezlashtirish va serverga yuk tushiris humanlarini kamaytirish texnikalarini o'rganasiz.
 
-## ✅ 2. KESHLASH VA ISHLASH OPTIMALASHTIRISH NI TUSHUNISH
-📌 **Keshlash**: Tez-tez so'raladigan ma'lumotlarni vaqtincha saqlab, ma'lumotlar bazasiga murojaatlarni kamaytiradi, bu esa javob vaqtini qisqartiradi.
-📌 **Ishlash optimallashtirish**: API so'rovlarini tezkorlashtirish uchun turli usullar (masalan, keshlash, ma'lumotlar bazasi so'rovlarini optimallashtirish) qo'llaniladi.
-📌 DRF keshlash turlari:
-- **Per-view keshlash**: Muayyan view uchun keshlash.
-- **Per-site keshlash**: Butun sayt uchun global keshlash.
-- **Backend keshlash**: Redis yoki Memcached kabi tizimlar bilan.
-📌 Ushbu darsda Redis bilan keshlash va ma'lumotlar bazasi so'rovlarini optimallashtirishga e'tibor qaratamiz.
+**Dars oxirida siz:**
+- ✅ Caching nima va nega kerak
+- ✅ Cache backends (Redis, Memcached)
+- ✅ View-level va Low-level caching
+- ✅ Query optimization (select_related, prefetch_related)
+- ✅ Database indexes
+- ✅ Response compression
+- ✅ Performance monitoring
+- ✅ Best practices
 
-## ✅ 3. REDIS KESHLASH UCHUN SOZLASH
-📌 Oldingi darsda Redis allaqachon Celery uchun o'rnatilgan. Agar hali o'rnatilmagan bo'lsa:
-```bash
-pip install redis
-sudo apt-get install redis-server  # Ubuntu uchun
+---
+
+## 📚 Oldingi Darsdan Kerakli Bilimlar
+
+Bu darsni boshlashdan oldin quyidagilar tayyor bo'lishi kerak:
+
+- [x] Django ORM va queries
+- [x] Redis basics
+- [x] DRF Views va Serializers
+- [x] Database concepts
+
+> **Eslatma:** Performance - production API'da eng muhim metrikalardan biri!
+
+---
+
+## 🔍 1. CACHING NIMA?
+
+### 1.1 Asosiy Tushuncha
+
+**Caching** - tez-tez ishlatiladigan ma'lumotlarni vaqtincha tezkor xotirada saqlash:
+
 ```
-📌 Redis serverini ishga tushiring:
+Without Cache 😴:
+Request → Database Query → Response (500ms)
+Request → Database Query → Response (500ms)
+Request → Database Query → Response (500ms)
+
+With Cache 😊:
+Request → Database Query → Cache → Response (500ms)
+Request → Cache → Response (5ms) ⚡
+Request → Cache → Response (5ms) ⚡
+```
+
+### 1.2 Cache Layers
+
+```mermaid
+graph TD
+    A[Client Request] --> B{Cache Hit?}
+    B -->|Yes| C[Return from Cache - FAST]
+    B -->|No| D[Database Query - SLOW]
+    D --> E[Save to Cache]
+    E --> F[Return Response]
+    C --> G[Response]
+    F --> G
+```
+
+### 1.3 Nega Kerak?
+
+| Metric | Without Cache | With Cache |
+|--------|--------------|------------|
+| **Response Time** | 500ms | 5ms (100x faster!) |
+| **DB Queries** | 1000/s | 100/s (10x less!) |
+| **Server Cost** | 💰💰💰 | 💰 |
+| **User Experience** | Slow 😴 | Fast ⚡ |
+| **Scalability** | Limited | High |
+
+---
+
+## 🛠️ 2. REDIS CACHE SETUP
+
+### 2.1 Installation
+
 ```bash
+# Django Redis
+pip install django-redis
+
+# Redis server (if not installed)
+# Ubuntu/Debian
+sudo apt-get install redis-server
+
+# macOS
+brew install redis
+
+# Windows (WSL or Docker)
+docker run -d -p 6379:6379 redis:alpine
+```
+
+### 2.2 Start Redis
+
+```bash
+# Start Redis server
 redis-server
-redis-cli ping  # Javob: PONG
+
+# Test connection
+redis-cli ping  # Should return: PONG
+
+# Monitor cache
+redis-cli monitor
 ```
 
-## ✅ 4. LOYIHA SOZLAMALARINI YANGILASH
-📌 `myproject/settings.py` faylida keshlash sozlamalarini qo'shamiz:
+### 2.3 Django Settings
+
+`myproject/settings.py`:
+
 ```python
-INSTALLED_APPS = [
-    ...
-    'rest_framework',
-    'rest_framework.authtoken',
-    'django_filters',
-    'myapp.apps.MyappConfig',
-]
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/hour',
-        'user': '20/hour',
-    },
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5,
-}
-
-# Celery sozlamalari
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Tashkent'
-CELERY_TASK_ALWAYS_EAGER = True
-
-# Keshlash sozlamalari
+# Cache Configuration
 CACHES = {
+    # Default cache (Redis)
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',  # Celery dan farqli database (1)
+        'LOCATION': 'redis://127.0.0.1:6379/1',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    }
+            'PASSWORD': '',  # If Redis has password
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 50,
+                'retry_on_timeout': True
+            },
+            # Serializer
+            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+            # Compression
+            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+        },
+        'KEY_PREFIX': 'myapp',  # Prefix for all cache keys
+        'TIMEOUT': 300,  # Default timeout (5 minutes)
+    },
+    
+    # Session cache (separate database)
+    'sessions': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/2',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'KEY_PREFIX': 'session',
+        'TIMEOUT': 60 * 60 * 24,  # 24 hours
+    },
 }
-```
-📌 **Tushuntirish**:
-- `CACHES`: Redis ni kesh backend sifatida sozlaydi. Celery dan farqli database (1) ishlatiladi.
-- `LOCATION`: Redis server manzili, database 1 uchun.
 
-## ✅ 5. KESHLASHNI VIEWSET GA QO'SHISH
-📌 `TaskViewSet` da `/tasks/` endpointi uchun keshlashni qo'shamiz. `myapp/views.py` faylini yangilaymiz:
+# Session backend (use Redis)
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'sessions'
+
+# Cache middleware (site-wide caching)
+# MIDDLEWARE = [
+#     'django.middleware.cache.UpdateCacheMiddleware',  # First
+#     # ... other middleware ...
+#     'django.middleware.cache.FetchFromCacheMiddleware',  # Last
+# ]
+```
+
+---
+
+## 🎨 3. VIEW-LEVEL CACHING
+
+### 3.1 Cache Decorator
+
+`tasks/views.py`:
+
 ```python
-from rest_framework import viewsets
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.decorators import action
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .models import Task
 from .serializers import TaskSerializer
-from .permissions import IsOwnerOrReadOnly
-from .pagination import CustomTaskPagination
-from rest_framework.permissions import IsAuthenticated
 
 class TaskViewSet(viewsets.ModelViewSet):
+    """
+    Task ViewSet with caching
+    """
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['completed', 'owner']
-    search_fields = ['title', 'description']
-    ordering_fields = ['created_at', 'completed']
-    ordering = ['created_at']
-    pagination_class = CustomTaskPagination
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-    @method_decorator(cache_page(60 * 5))  # 5 daqiqa keshlash
+    
+    @method_decorator(cache_page(60 * 5))  # 5 minutes
     def list(self, request, *args, **kwargs):
+        """
+        Cached list view - 5 daqiqa
+        
+        Cache key includes:
+        - URL path
+        - Query parameters
+        - HTTP headers
+        """
         return super().list(request, *args, **kwargs)
+    
+    @method_decorator(cache_page(60 * 10))  # 10 minutes
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Cached detail view - 10 daqiqa
+        """
+        return super().retrieve(request, *args, **kwargs)
+    
+    # Create, Update, Delete - NO CACHE (mutation operations)
+    
+    @action(detail=False, methods=['get'])
+    @method_decorator(cache_page(60 * 15))  # 15 minutes
+    def stats(self, request):
+        """
+        Custom action with caching
+        
+        GET /tasks/stats/
+        """
+        from django.db.models import Count, Q
+        
+        stats = {
+            'total': Task.objects.count(),
+            'completed': Task.objects.filter(completed=True).count(),
+            'pending': Task.objects.filter(completed=False).count(),
+            'by_priority': Task.objects.values('priority').annotate(
+                count=Count('id')
+            ),
+        }
+        
+        return Response(stats)
 ```
-📌 **Tushuntirish**:
-- `cache_page(60 * 5)`: `/tasks/` endpointi uchun javobni 5 daqiqa keshlaydi.
-- `@method_decorator`: DRF viewset metodlarida keshlashni qo'llash uchun ishlatiladi.
-- Faqat `list` (GET /tasks/) metodi keshlanadi, chunki u eng ko'p so'raladigan operatsiya.
 
-## ✅ 6. MA'LUMOTLAR BAZASI SO'ROVLARINI OPTIMALASHTIRISH
-📌 Ma'lumotlar bazasi so'rovlarini kamaytirish uchun `Task` modelidagi `owner` maydoniga `select_related` qo'shamiz:
+### 3.2 Custom Cache Keys
+
+```python
+from django.core.cache import cache
+from django.utils.cache import get_cache_key
+
+class TaskViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet with custom cache keys
+    """
+    
+    def list(self, request, *args, **kwargs):
+        """
+        Custom cache key per user
+        """
+        # Generate cache key
+        cache_key = f'task_list_user_{request.user.id}'
+        
+        # Try to get from cache
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+        
+        # Get from database
+        response = super().list(request, *args, **kwargs)
+        
+        # Save to cache (5 minutes)
+        cache.set(cache_key, response.data, 60 * 5)
+        
+        return response
+    
+    def perform_create(self, serializer):
+        """
+        Invalidate cache on create
+        """
+        # Create task
+        task = serializer.save(owner=self.request.user)
+        
+        # Invalidate user's cache
+        cache_key = f'task_list_user_{self.request.user.id}'
+        cache.delete(cache_key)
+        
+        return task
+    
+    def perform_update(self, serializer):
+        """
+        Invalidate cache on update
+        """
+        task = serializer.save()
+        
+        # Invalidate multiple cache keys
+        cache.delete_many([
+            f'task_list_user_{task.owner.id}',
+            f'task_detail_{task.id}',
+            'task_stats',
+        ])
+        
+        return task
+```
+
+---
+
+## 💼 4. LOW-LEVEL CACHING
+
+### 4.1 Manual Cache Operations
+
+`tasks/utils.py`:
+
+```python
+from django.core.cache import cache
+from .models import Task
+
+def get_task_stats():
+    """
+    Get task statistics with caching
+    """
+    cache_key = 'task_stats'
+    
+    # Try cache first
+    stats = cache.get(cache_key)
+    
+    if stats is None:
+        # Calculate from database
+        from django.db.models import Count, Q
+        
+        stats = {
+            'total': Task.objects.count(),
+            'completed': Task.objects.filter(completed=True).count(),
+            'pending': Task.objects.filter(completed=False).count(),
+            'high_priority': Task.objects.filter(priority='high').count(),
+        }
+        
+        # Cache for 10 minutes
+        cache.set(cache_key, stats, 60 * 10)
+        print('[CACHE] Stats calculated and cached')
+    else:
+        print('[CACHE] Stats retrieved from cache')
+    
+    return stats
+
+
+def get_user_tasks(user_id, filters=None):
+    """
+    Get user tasks with cache
+    """
+    # Build cache key
+    filter_str = '_'.join(f'{k}={v}' for k, v in (filters or {}).items())
+    cache_key = f'user_{user_id}_tasks_{filter_str}'
+    
+    # Try cache
+    tasks = cache.get(cache_key)
+    
+    if tasks is None:
+        # Query database
+        queryset = Task.objects.filter(owner_id=user_id)
+        
+        # Apply filters
+        if filters:
+            queryset = queryset.filter(**filters)
+        
+        tasks = list(queryset.values())
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, tasks, 60 * 5)
+    
+    return tasks
+
+
+def invalidate_user_cache(user_id):
+    """
+    Invalidate all user-related caches
+    """
+    # Pattern matching (Redis specific)
+    from django_redis import get_redis_connection
+    
+    redis_conn = get_redis_connection('default')
+    
+    # Get all keys matching pattern
+    pattern = f'*user_{user_id}_*'
+    keys = redis_conn.keys(pattern)
+    
+    # Delete all matching keys
+    if keys:
+        redis_conn.delete(*keys)
+        print(f'[CACHE] Invalidated {len(keys)} cache keys for user {user_id}')
+```
+
+### 4.2 Cache Decorators
+
+```python
+from functools import wraps
+from django.core.cache import cache
+
+def cache_result(timeout=60 * 5, key_prefix=''):
+    """
+    Custom cache decorator for functions
+    
+    Usage:
+        @cache_result(timeout=300, key_prefix='expensive_calc')
+        def expensive_calculation(x, y):
+            return x ** y
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Generate cache key
+            cache_key = f'{key_prefix}_{func.__name__}_{args}_{kwargs}'
+            
+            # Try cache
+            result = cache.get(cache_key)
+            
+            if result is None:
+                # Call function
+                result = func(*args, **kwargs)
+                
+                # Cache result
+                cache.set(cache_key, result, timeout)
+            
+            return result
+        
+        return wrapper
+    return decorator
+
+
+# Usage
+@cache_result(timeout=60 * 10, key_prefix='task')
+def calculate_task_metrics(user_id):
+    """
+    Expensive calculation with caching
+    """
+    import time
+    time.sleep(2)  # Simulate slow operation
+    
+    return {
+        'user_id': user_id,
+        'total_tasks': Task.objects.filter(owner_id=user_id).count(),
+        'completion_rate': 0.85
+    }
+```
+
+---
+
+## 🚀 5. QUERY OPTIMIZATION
+
+### 5.1 select_related (ForeignKey)
+
 ```python
 class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all().select_related('owner')  # owner maydonini oldindan yuklash
-    serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['completed', 'owner']
-    search_fields = ['title', 'description']
-    ordering_fields = ['created_at', 'completed']
-    ordering = ['created_at']
-    pagination_class = CustomTaskPagination
+    """
+    Optimized queryset with select_related
+    """
+    
+    def get_queryset(self):
+        """
+        Optimize ForeignKey queries
+        """
+        # ❌ Bad - N+1 queries
+        # queryset = Task.objects.all()
+        # for task in queryset:
+        #     print(task.owner.username)  # Extra query!
+        
+        # ✅ Good - Single JOIN query
+        queryset = Task.objects.select_related('owner', 'assigned_to')
+        # for task in queryset:
+        #     print(task.owner.username)  # No extra query!
+        
+        return queryset
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
 
-    @method_decorator(cache_page(60 * 5))
+# Example of N+1 problem
+# Without select_related:
+tasks = Task.objects.all()  # 1 query
+for task in tasks:
+    print(task.owner.username)  # N queries (one per task!)
+# Total: 1 + N queries
+
+# With select_related:
+tasks = Task.objects.select_related('owner').all()  # 1 query (with JOIN)
+for task in tasks:
+    print(task.owner.username)  # No extra query!
+# Total: 1 query
+```
+
+### 5.2 prefetch_related (ManyToMany)
+
+```python
+class TaskViewSet(viewsets.ModelViewSet):
+    """
+    Optimize ManyToMany queries
+    """
+    
+    def get_queryset(self):
+        """
+        Optimize queryset with prefetch_related
+        """
+        queryset = Task.objects.all()
+        
+        # ForeignKey optimization
+        queryset = queryset.select_related('owner', 'assigned_to')
+        
+        # ManyToMany optimization (if Task has tags, comments, etc.)
+        queryset = queryset.prefetch_related('tags', 'comments')
+        
+        return queryset
+
+
+# Example with ManyToMany
+# Assume Task has tags = ManyToManyField(Tag)
+
+# ❌ Bad - N+1 queries
+tasks = Task.objects.all()
+for task in tasks:
+    print(task.tags.all())  # N queries!
+
+# ✅ Good - 2 queries total
+tasks = Task.objects.prefetch_related('tags').all()
+for task in tasks:
+    print(task.tags.all())  # No extra query!
+```
+
+### 5.3 only() va defer()
+
+```python
+class TaskViewSet(viewsets.ModelViewSet):
+    """
+    Load only needed fields
+    """
+    
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-```
-📌 **Tushuntirish**:
-- `select_related('owner')`: `owner` maydonini oldindan yuklaydi, bu esa qo'shimcha ma'lumotlar bazasi so'rovlarini kamaytiradi.
-
-## ✅ 7. TESTLARNI YANGILASH
-📌 Keshlashni sinash uchun `myapp/tests.py` fayliga yangi test qo'shamiz:
-```python
-from django.test import TestCase
-from rest_framework.test import APITestCase
-from rest_framework import status
-from django.urls import reverse
-from django.contrib.auth.models import User
-from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Task
-from .serializers import TaskSerializer
-from django.core.cache import cache
-import logging
-
-logger = logging.getLogger(__name__)
-
-# Oldingi testlar (TaskModelTest, TaskSerializerTest, TaskSignalTest) shu yerda qoladi
-
-class TaskAPITest(APITestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass123')
-        self.other_user = User.objects.create_user(username='otheruser', password='otherpass123')
-        self.task = Task.objects.create(
-            title='Test vazifa',
-            description='Test tavsifi',
-            owner=self.user
+        """
+        List view - minimal fields
+        """
+        # ❌ Bad - Load all fields
+        # queryset = Task.objects.all()
+        
+        # ✅ Good - Load only needed fields
+        queryset = Task.objects.only(
+            'id', 'title', 'status', 'priority', 'due_date'
         )
-        self.token = RefreshToken.for_user(self.user).access_token
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
-        cache.clear()  # Testdan oldin keshni tozalash
+        
+        serializer = TaskListSerializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Detail view - all fields
+        """
+        # Load all fields for detail view
+        task = self.get_object()
+        serializer = TaskDetailSerializer(task)
+        return Response(serializer.data)
 
-    def test_get_tasks_list(self):
-        url = reverse('task-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['title'], 'Test vazifa')
 
-    def test_create_task(self):
-        url = reverse('task-list')
-        data = {'title': 'Yangi vazifa', 'description': 'Yangi tavsif'}
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Task.objects.count(), 2)
-        self.assertEqual(Task.objects.latest('id').title, 'Yangi vazifa')
-
-    def test_update_task_owner_only(self):
-        url = reverse('task-detail', kwargs={'pk': self.task.id})
-        data = {'completed': True}
-        response = self.client.patch(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.task.refresh_from_db()
-        self.assertTrue(self.task.completed)
-
-        other_token = RefreshToken.for_user(self.other_user).access_token
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {other_token}')
-        response = self.client.patch(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_delete_task_owner_only(self):
-        url = reverse('task-detail', kwargs={'pk': self.task.id})
-        response = self.client.delete(url)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(Task.objects.count(), 0)
-
-        self.task = Task.objects.create(title='Yana vazifa', owner=self.user)
-        other_token = RefreshToken.for_user(self.other_user).access_token
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {other_token}')
-        response = self.client.delete(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_pagination(self):
-        for i in range(5):
-            Task.objects.create(title=f'Vazifa {i}', owner=self.user)
-        url = reverse('task-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 3)
-        self.assertIn('next', response.data)
-        self.assertIsNone(response.data['previous'])
-
-    def test_filtering(self):
-        Task.objects.create(title='Bajarilgan vazifa', completed=True, owner=self.user)
-        url = reverse('task-list') + '?completed=true'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['title'], 'Bajarilgan vazifa')
-
-    def test_caching(self):
-        url = reverse('task-list')
-        # Birinchi so'rov
-        response1 = self.client.get(url)
-        self.assertEqual(response1.status_code, status.HTTP_200_OK)
-        # Keshdan ikkinchi so'rov
-        response2 = self.client.get(url)
-        self.assertEqual(response2.status_code, status.HTTP_200_OK)
-        self.assertEqual(response1.data, response2.data)  # Keshlangan javob bir xil
-        # Yangi vazifa qo'shish keshni yangilamaydi
-        Task.objects.create(title='Kesh sinovi', owner=self.user)
-        response3 = self.client.get(url)
-        self.assertEqual(len(response3.data['results']), len(response1.data['results']))  # Keshlangan natija
+# defer() - opposite of only()
+# Load all fields EXCEPT specified ones
+queryset = Task.objects.defer('description', 'notes')
+# Useful when you have large text fields you don't need
 ```
-📌 **Tushuntirish**:
-- `test_caching`: `/tasks/` endpointining keshlanganligini sinaydi.
-- `cache.clear()`: Testdan oldin keshni tozalaydi.
-- Keshlangan javob bir xil bo'lishi va yangi vazifa qo'shilganda keshning yangilanmasligi tekshiriladi.
 
-## ✅ 8. URL SOZLASH
-📌 `myproject/urls.py` faylida URL marshrutlari oldingi darsdagidek qoladi:
+### 5.4 Query Count Monitoring
+
 ```python
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from myapp.views import TaskViewSet
+from django.db import connection
+from django.test.utils import override_settings
 
-router = DefaultRouter()
-router.register(r'tasks', TaskViewSet)
-
-urlpatterns = [
-    path('', include(router.urls)),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-]
-```
-
-## ✅ 9. KESHLASH VA ISHLASHNI SINAB KO'RISH
-📌 Serverni ishga tushiring:
-```bash
-python manage.py runserver
-```
-📌 Redis serverini ishga tushiring:
-```bash
-redis-server
-```
-📌 Celery worker ni ishga tushiring (ixtiyoriy, testlar uchun shart emas):
-```bash
-celery -A myproject worker --loglevel=info
-```
-
-### ❇️ **Foydalanuvchi va token yaratish**:
-📌 Agar hali yaratilmagan bo'lsa, foydalanuvchi yarating:
-```bash
-python manage.py createsuperuser  # username: testuser, password: testpass123
-```
-📌 JWT token oling:
-```bash
-curl -X POST http://127.0.0.1:8000/api/token/ -H "Content-Type: application/json" -d '{"username": "testuser", "password": "testpass123"}'
+class TaskViewSet(viewsets.ModelViewSet):
+    """
+    Monitor query count (development)
+    """
+    
+    def list(self, request, *args, **kwargs):
+        """
+        List with query count logging
+        """
+        from django.db import reset_queries
+        reset_queries()
+        
+        response = super().list(request, *args, **kwargs)
+        
+        # Log query count (development only)
+        if settings.DEBUG:
+            query_count = len(connection.queries)
+            print(f'[QUERIES] Total queries: {query_count}')
+            
+            # Log slow queries
+            for query in connection.queries:
+                if float(query['time']) > 0.01:  # > 10ms
+                    print(f'[SLOW QUERY] {query["time"]}s: {query["sql"][:100]}')
+        
+        return response
 ```
 
-### ❇️ **Keshlash sinovi**:
-📌 **Manzil**: `http://127.0.0.1:8000/tasks/`  
-📌 **Usul**: GET  
-```bash
-curl http://127.0.0.1:8000/tasks/ -H "Authorization: Bearer <access_token>"
-```
-📌 Birinchi so'rov ma'lumotlar bazasidan olinadi, keyingi so'rovlar 5 daqiqa davomida keshdan qaytariladi. Yangi vazifa qo'shing:
-```bash
-curl -X POST http://127.0.0.1:8000/tasks/ -H "Authorization: Bearer <access_token>" -H "Content-Type: application/json" -d '{"title": "Yangi vazifa", "description": "Test"}'
-```
-📌 `/tasks/` ni qayta so'rang — kesh tufayli yangi vazifa ko'rinmaydi.
+---
 
-### ❇️ **Testlarni ishga tushirish**:
-```bash
-python manage.py test
-```
-📌 `test_caching` testi keshning to'g'ri ishlashini tasdiqlaydi.
+## 📊 6. DATABASE INDEXES
 
-## ✅ 10. ADMIN PANELI ORQALI SINOV (IXTIYORIY)
-📌 Ma'lumotlarni qo'lda sinash uchun admin panelidan foydalaning:
+### 6.1 Model Indexes
 
-### ❇️ **Admin foydalanuvchisini tekshirish**:
-```bash
-python manage.py createsuperuser
-```
+`tasks/models.py`:
 
-### ❇️ **Modelni admin panelida ro'yxatdan o'tkazish**:
-📌 `myapp/admin.py` faylida:
 ```python
-from django.contrib import admin
-from .models import Task
+from django.db import models
 
-admin.site.register(Task)
+class Task(models.Model):
+    """
+    Task model with optimized indexes
+    """
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20)
+    priority = models.CharField(max_length=20)
+    completed = models.BooleanField(default=False)
+    due_date = models.DateField(null=True, blank=True)
+    
+    owner = models.ForeignKey(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='owned_tasks'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        # Simple indexes
+        indexes = [
+            # Single field indexes
+            models.Index(fields=['status']),
+            models.Index(fields=['priority']),
+            models.Index(fields=['completed']),
+            models.Index(fields=['due_date']),
+            models.Index(fields=['created_at']),
+            
+            # Composite indexes (multiple fields)
+            models.Index(fields=['owner', 'completed']),
+            models.Index(fields=['owner', 'status']),
+            models.Index(fields=['status', 'priority']),
+            
+            # Descending order index
+            models.Index(fields=['-created_at']),
+            
+            # Named index
+            models.Index(
+                fields=['owner', '-created_at'],
+                name='owner_created_idx'
+            ),
+        ]
+        
+        # Ordering (uses index)
+        ordering = ['-created_at']
+    
+    # ForeignKey already creates index automatically
+    # owner field has index: task_owner_id_idx
+
+
+# Migration to create indexes
+# python manage.py makemigrations
+# python manage.py migrate
 ```
 
-📌 `http://127.0.0.1:8000/admin/` manzilida vazifalarni qo'shing yoki tahrirlang.
+### 6.2 When to Use Indexes
 
-## ✅ 11. SINOV UCHUN MASALALAR
-📌 Keshlash va ishlashni sinash uchun quyidagi amallarni bajarib ko'ring:
-1. `/tasks/` manziliga bir necha marta GET so'rov yuboring va javob vaqtini solishtiring.
-2. Yangi vazifa qo'shing va `/tasks/` manzilida kesh tufayli yangi vazifa ko'rinmasligini tekshiring.
-3. `python manage.py test` bilan `test_caching` testini sinab ko'ring.
-4. `select_related` effekti uchun ma'lumotlar bazasi so'rovlarini (Django Debug Toolbar bilan) tekshiring.
+```python
+# ✅ Create index when:
+- Frequent WHERE clauses
+- Frequent ORDER BY
+- Foreign Keys (automatic)
+- Frequent JOIN conditions
+- Unique constraints
+
+# ❌ Don't create index when:
+- Small tables (< 1000 rows)
+- Rarely queried fields
+- High write frequency
+- Large text fields
+```
+
+---
+
+## 🎯 AMALIYOT TOPSHIRIQLARI
+
+### 📝 Topshiriq 1: Basic Caching (Oson)
+
+**Talablar:**
+- ✅ Redis cache setup
+- ✅ View-level caching (5 min)
+- ✅ Stats endpoint with cache
+- ✅ Cache invalidation on create/update
+- ✅ Test cache hit/miss
+
+### 📝 Topshiriq 2: Query Optimization (O'rta)
+
+**Talablar:**
+- ✅ select_related for all ForeignKey
+- ✅ prefetch_related for ManyToMany
+- ✅ only() for list views
+- ✅ Database indexes (5+)
+- ✅ Query count < 5 per request
+- ✅ Debug toolbar integration
+
+### 📝 Topshiriq 3: Advanced Performance (Qiyin)
+
+**Talablar:**
+- ✅ Multi-level caching (local + Redis)
+- ✅ Cache warming
+- ✅ Automatic cache invalidation
+- ✅ Response compression
+- ✅ Database query analysis
+- ✅ Load testing (100+ RPS)
+- ✅ Performance monitoring
+
+---
+
+## 📊 PERFORMANCE METRICS
+
+```mermaid
+graph LR
+    A[Optimization] --> B[Response Time]
+    A --> C[Query Count]
+    A --> D[CPU Usage]
+    A --> E[Memory Usage]
+    
+    B --> F[< 100ms Target]
+    C --> G[< 5 queries]
+    D --> H[< 50%]
+    E --> I[Stable]
+```
+
+---
+
+## 🔗 KEYINGI DARSLAR
+
+✅ **Dars 16 tugadi! Caching va Performance Optimization o'rgandingiz!**
+
+**Keyingi darsda:**
+- API Documentation (Swagger/OpenAPI)
+- Auto-generated docs
+- Interactive API explorer
+
+---
+
+## 📚 QISQA XULOSALAR
+
+### Cache Commands
+
+```python
+from django.core.cache import cache
+
+# Set
+cache.set('key', 'value', timeout=300)
+
+# Get
+value = cache.get('key')
+value = cache.get('key', default='default_value')
+
+# Delete
+cache.delete('key')
+cache.delete_many(['key1', 'key2'])
+
+# Clear all
+cache.clear()
+
+# Atomic operations
+cache.add('key', 'value')  # Only if not exists
+cache.get_or_set('key', default='value', timeout=300)
+
+# Increment/Decrement
+cache.incr('counter')
+cache.decr('counter')
+```
+
+### Optimization Checklist
+
+```python
+# ✅ Database Optimization
+- select_related() for ForeignKey
+- prefetch_related() for ManyToMany
+- only() / defer() for fields
+- Database indexes
+- Avoid N+1 queries
+
+# ✅ Caching Strategy
+- Cache read-heavy endpoints
+- Use appropriate timeouts
+- Invalidate on writes
+- Monitor cache hit ratio
+
+# ✅ Performance Monitoring
+- Django Debug Toolbar
+- Query count < 5
+- Response time < 100ms
+- Load testing
+```
+
+### Best Practices
+
+```python
+# ✅ Good
+- Cache GET endpoints only
+- Short cache timeout (5-15 min)
+- Invalidate on mutations
+- Use composite indexes
+- Monitor performance
+
+# ❌ Bad
+- Cache POST/PUT/DELETE
+- Very long timeout (hours)
+- No cache invalidation
+- Index every field
+- No monitoring
+```
+
+**Esda tuting:**
+- Caching = Speed boost
+- select_related = JOIN queries
+- Indexes = Fast lookups
+- Monitor = Know your performance!
+- Cache wisely, not everything! 🚀
